@@ -5,6 +5,7 @@ using Microsoft.OpenApi.Models;
 using System.Text;
 using MindSetCoach.Api.Data;
 using MindSetCoach.Api.Services;
+using MindSetCoach.Api.Services.AI.Experiments;
 using MindSetCoach.Api.Configuration;
 
 try
@@ -85,8 +86,25 @@ try
     {
         // Development - use SQLite
         builder.Services.AddDbContext<MindSetCoachDbContext>(options =>
-            options.UseSqlite("Data Source=mindsetcoach.db"));
+        {
+            options.UseSqlite("Data Source=mindsetcoach.db");
+            options.ConfigureWarnings(warnings =>
+                warnings.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
+        });
     }
+
+    // Experiments database - always SQLite at ./data/experiments.db
+    var experimentsDbPath = Path.Combine(Directory.GetCurrentDirectory(), "data", "experiments.db");
+    var experimentsDbDir = Path.GetDirectoryName(experimentsDbPath);
+    if (!string.IsNullOrEmpty(experimentsDbDir) && !Directory.Exists(experimentsDbDir))
+    {
+        Directory.CreateDirectory(experimentsDbDir);
+    }
+    builder.Services.AddDbContext<ExperimentsDbContext>(options =>
+        options.UseSqlite($"Data Source={experimentsDbPath}"));
+
+    // Register ContextExperimentLogger as scoped (needs DbContext)
+    builder.Services.AddScoped<ContextExperimentLogger>();
 
     // Register application services
     builder.Services.AddScoped<IAuthService, AuthService>();
@@ -165,6 +183,10 @@ try
     {
         var db = scope.ServiceProvider.GetRequiredService<MindSetCoachDbContext>();
         db.Database.Migrate();
+
+        // Apply experiments database migrations
+        var experimentsDb = scope.ServiceProvider.GetRequiredService<ExperimentsDbContext>();
+        experimentsDb.Database.Migrate();
     }
 
     // Configure the HTTP request pipeline

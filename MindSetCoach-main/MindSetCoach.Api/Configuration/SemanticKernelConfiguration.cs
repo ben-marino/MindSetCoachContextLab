@@ -121,9 +121,8 @@ public static class SemanticKernelConfiguration
             services.AddScoped<IMentalCoachAIService, MentalCoachAIService>();
         }
 
-        // Register experiment logger as singleton (to persist across requests)
-        services.AddSingleton<ContextExperimentLogger>();
-        
+        // Note: ContextExperimentLogger is registered in Program.cs as scoped (requires DbContext)
+
         // Register AI provider info for experiments
         services.AddSingleton(new AIProviderInfo
         {
