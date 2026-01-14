@@ -5,6 +5,7 @@ using Microsoft.OpenApi.Models;
 using System.Text;
 using MindSetCoach.Api.Data;
 using MindSetCoach.Api.Services;
+using MindSetCoach.Api.Services.AI;
 using MindSetCoach.Api.Services.AI.Experiments;
 using MindSetCoach.Api.Configuration;
 
@@ -110,6 +111,7 @@ try
     builder.Services.AddScoped<IAuthService, AuthService>();
     builder.Services.AddScoped<IJournalService, JournalService>();
     builder.Services.AddScoped<ICoachService, CoachService>();
+    builder.Services.AddScoped<IClaimExtractorService, ClaimExtractorService>();
 
     // Register Semantic Kernel and AI services
     builder.Services.AddSemanticKernelServices(builder.Configuration);
