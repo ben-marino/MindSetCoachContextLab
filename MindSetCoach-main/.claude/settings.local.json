@@ -1,0 +1,29 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dotnet add reference ../MindSetCoach.Api/MindSetCoach.Api.csproj)",
+      "Bash(mkdir -p MindSetCoach.Api/Controllers MindSetCoach.Api/Models MindSetCoach.Api/Services MindSetCoach.Api/Data)",
+      "Bash(dotnet ef migrations add InitialCreate)",
+      "Bash(dotnet ef database update)",
+      "Bash(dotnet ef migrations remove)",
+      "Bash(sqlite3 mindsetcoach.db \"SELECT name FROM sqlite_master WHERE type=''table'' ORDER BY name;\")",
+      "Bash(dotnet build MindSetCoach.sln)",
+      "Bash(git init)",
+      "Bash(git add .)",
+      "Bash(dotnet run:*)",
+      "Bash(dotnet restore:*)",
+      "Bash(dotnet build:*)",
+      "Bash(git remote add:*)",
+      "Bash(git branch:*)",
+      "Bash(git push:*)",
+      "Bash(git fetch:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(fly deploy:*)",
+      "Bash(ls:*)",
+      "Bash(fly logs:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

@@ -1,0 +1,48 @@
+@page
+@model MindSetCoach.Web.Pages.Auth.LoginModel
+@{
+    ViewData["Title"] = "Login";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-6 col-lg-4">
+        <div class="card shadow-sm">
+            <div class="card-body p-4">
+                <h2 class="card-title text-center mb-4">Login to MindSetCoach</h2>
+
+                @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+                {
+                    <div class="alert alert-danger" role="alert">
+                        @Model.ErrorMessage
+                    </div>
+                }
+
+                <form method="post">
+                    <div class="mb-3">
+                        <label asp-for="LoginRequest.Email" class="form-label">Email</label>
+                        <input asp-for="LoginRequest.Email" class="form-control" type="email" placeholder="Enter your email" />
+                        <span asp-validation-for="LoginRequest.Email" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="LoginRequest.Password" class="form-label">Password</label>
+                        <input asp-for="LoginRequest.Password" class="form-control" type="password" placeholder="Enter your password" />
+                        <span asp-validation-for="LoginRequest.Password" class="text-danger"></span>
+                    </div>
+
+                    <div class="d-grid gap-2 mb-3">
+                        <button type="submit" class="btn btn-primary">Login</button>
+                    </div>
+
+                    <div class="text-center">
+                        <p class="mb-0">Don't have an account? <a asp-page="/Auth/Register">Register here</a></p>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

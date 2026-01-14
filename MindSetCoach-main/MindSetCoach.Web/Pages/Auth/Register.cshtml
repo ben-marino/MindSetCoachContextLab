@@ -1,0 +1,88 @@
+@page
+@model MindSetCoach.Web.Pages.Auth.RegisterModel
+@{
+    ViewData["Title"] = "Register";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-6 col-lg-5">
+        <div class="card shadow-sm">
+            <div class="card-body p-4">
+                <h2 class="card-title text-center mb-4">Register for MindSetCoach</h2>
+
+                @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+                {
+                    <div class="alert alert-danger" role="alert">
+                        @Model.ErrorMessage
+                    </div>
+                }
+
+                @if (!string.IsNullOrEmpty(Model.SuccessMessage))
+                {
+                    <div class="alert alert-success" role="alert">
+                        @Model.SuccessMessage
+                    </div>
+                }
+
+                <form method="post">
+                    <div class="mb-3">
+                        <label asp-for="RegisterRequest.Name" class="form-label">Name</label>
+                        <input asp-for="RegisterRequest.Name" class="form-control" placeholder="Enter your full name" />
+                        <span asp-validation-for="RegisterRequest.Name" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="RegisterRequest.Email" class="form-label">Email</label>
+                        <input asp-for="RegisterRequest.Email" class="form-control" type="email" placeholder="Enter your email" />
+                        <span asp-validation-for="RegisterRequest.Email" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="RegisterRequest.Password" class="form-label">Password</label>
+                        <input asp-for="RegisterRequest.Password" class="form-control" type="password" placeholder="At least 6 characters" />
+                        <span asp-validation-for="RegisterRequest.Password" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="RegisterRequest.Role" class="form-label">I am a...</label>
+                        <select asp-for="RegisterRequest.Role" class="form-select" id="roleSelect">
+                            <option value="">Select your role</option>
+                            <option value="Coach">Coach</option>
+                            <option value="Athlete">Athlete</option>
+                        </select>
+                        <span asp-validation-for="RegisterRequest.Role" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3" id="coachEmailField" style="display: none;">
+                        <label asp-for="RegisterRequest.CoachEmail" class="form-label">Coach Email</label>
+                        <input asp-for="RegisterRequest.CoachEmail" class="form-control" type="email" placeholder="Enter your coach's email" />
+                        <span asp-validation-for="RegisterRequest.CoachEmail" class="text-danger"></span>
+                        <small class="form-text text-muted">Enter the email address of your coach to link your account.</small>
+                    </div>
+
+                    <div class="d-grid gap-2 mb-3">
+                        <button type="submit" class="btn btn-primary">Register</button>
+                    </div>
+
+                    <div class="text-center">
+                        <p class="mb-0">Already have an account? <a asp-page="/Auth/Login">Login here</a></p>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        document.getElementById('roleSelect').addEventListener('change', function() {
+            const coachEmailField = document.getElementById('coachEmailField');
+            if (this.value === 'Athlete') {
+                coachEmailField.style.display = 'block';
+            } else {
+                coachEmailField.style.display = 'none';
+            }
+        });
+    </script>
+}

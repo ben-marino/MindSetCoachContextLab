@@ -1,0 +1,11 @@
+**/.git
+**/.vs
+**/.vscode
+**/bin
+**/obj
+**/*.db
+**/*.db-shm
+**/*.db-wal
+**/node_modules
+**/.DS_Store
+**/Thumbs.db

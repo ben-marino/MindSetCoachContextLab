@@ -1,0 +1,116 @@
+@page
+@model MindSetCoach.Web.Pages.Journal.NewEntryModel
+@{
+    ViewData["Title"] = "New Journal Entry";
+}
+
+<div class="row justify-content-center">
+    <div class="col-12 col-lg-10 col-xl-8">
+        <!-- Header -->
+        <div class="mb-4">
+            <h1 class="h2 mb-2">Daily Journal Entry</h1>
+            <p class="text-muted">Take a few minutes to reflect on your training today</p>
+        </div>
+
+        <!-- Navigation Pills -->
+        <ul class="nav nav-pills mb-4">
+            <li class="nav-item">
+                <a class="nav-link active" asp-page="/Journal/NewEntry">New Entry</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" asp-page="/Journal/Entries">My Entries</a>
+            </li>
+        </ul>
+
+        <!-- Success Message -->
+        @if (!string.IsNullOrEmpty(Model.SuccessMessage))
+        {
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <strong>Success!</strong> @Model.SuccessMessage
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
+
+        <!-- Error Message -->
+        @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+        {
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <strong>Error:</strong> @Model.ErrorMessage
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
+
+        <!-- Journal Entry Form -->
+        <form method="post" class="journal-form">
+            @Html.AntiForgeryToken()
+            <!-- Date Picker -->
+            <div class="card mb-4 shadow-sm">
+                <div class="card-body">
+                    <label asp-for="Entry.EntryDate" class="form-label fw-bold">Entry Date</label>
+                    <input asp-for="Entry.EntryDate" type="date" class="form-control form-control-lg" />
+                    <span asp-validation-for="Entry.EntryDate" class="text-danger"></span>
+                </div>
+            </div>
+
+            <!-- Emotional State -->
+            <div class="card mb-4 shadow-sm">
+                <div class="card-body">
+                    <label asp-for="Entry.EmotionalState" class="form-label fw-bold fs-5 mb-3">
+                        How are you feeling about training today?
+                    </label>
+                    <textarea asp-for="Entry.EmotionalState"
+                              class="form-control form-control-lg"
+                              rows="4"
+                              placeholder="Describe your emotional state, anxiety, confidence, motivation..."></textarea>
+                    <span asp-validation-for="Entry.EmotionalState" class="text-danger"></span>
+                    <div class="form-text mt-2">Be honest about your mental and emotional state</div>
+                </div>
+            </div>
+
+            <!-- Session Reflection -->
+            <div class="card mb-4 shadow-sm">
+                <div class="card-body">
+                    <label asp-for="Entry.SessionReflection" class="form-label fw-bold fs-5 mb-3">
+                        What went well/didn't go well in today's session?
+                    </label>
+                    <textarea asp-for="Entry.SessionReflection"
+                              class="form-control form-control-lg"
+                              rows="5"
+                              placeholder="Reflect on your training - physical and mental aspects..."></textarea>
+                    <span asp-validation-for="Entry.SessionReflection" class="text-danger"></span>
+                    <div class="form-text mt-2">Think about both successes and challenges</div>
+                </div>
+            </div>
+
+            <!-- Mental Barriers -->
+            <div class="card mb-4 shadow-sm">
+                <div class="card-body">
+                    <label asp-for="Entry.MentalBarriers" class="form-label fw-bold fs-5 mb-3">
+                        What mental barriers showed up?
+                    </label>
+                    <textarea asp-for="Entry.MentalBarriers"
+                              class="form-control form-control-lg"
+                              rows="4"
+                              placeholder="Self-doubt, fear, negative thoughts, distractions..."></textarea>
+                    <span asp-validation-for="Entry.MentalBarriers" class="text-danger"></span>
+                    <div class="form-text mt-2">Identify any mental obstacles or negative patterns</div>
+                </div>
+            </div>
+
+            <!-- Submit Button -->
+            <div class="d-grid gap-2 mb-4">
+                <button type="submit" class="btn btn-primary btn-lg py-3 fs-5">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-check-circle me-2" viewBox="0 0 16 16">
+                        <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                        <path d="M10.97 4.97a.235.235 0 0 0-.02.022L7.477 9.417 5.384 7.323a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-1.071-1.05z"/>
+                    </svg>
+                    Save Entry
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

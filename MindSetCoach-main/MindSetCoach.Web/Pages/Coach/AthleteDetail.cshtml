@@ -1,0 +1,303 @@
+@page
+@model MindSetCoach.Web.Pages.Coach.AthleteDetailModel
+@{
+    ViewData["Title"] = Model.AthleteDetail != null ? $"{Model.AthleteDetail.Name}'s Journal Entries" : "Athlete Details";
+}
+
+@if (!string.IsNullOrEmpty(Model.ErrorMessage))
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <strong>Error:</strong> @Model.ErrorMessage
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+@if (Model.AthleteDetail != null)
+{
+    <div class="row mb-4">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a asp-page="/Coach/Dashboard">Dashboard</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">@Model.AthleteDetail.Name</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <h1 class="display-5 fw-bold text-primary mb-2">@Model.AthleteDetail.Name</h1>
+                    <p class="text-muted mb-0">@Model.AthleteDetail.Email</p>
+                </div>
+                <a asp-page="/Coach/Dashboard" class="btn btn-outline-secondary">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-left" viewBox="0 0 16 16">
+                        <path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8"/>
+                    </svg>
+                    Back to Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <div class="fs-2 fw-bold text-primary">@Model.AthleteDetail.TotalEntries</div>
+                    <div class="text-muted">Total Entries</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <div class="fs-2 fw-bold @(Model.AthleteDetail.FlaggedEntriesCount > 0 ? "text-danger" : "text-success")">
+                        @Model.AthleteDetail.FlaggedEntriesCount
+                    </div>
+                    <div class="text-muted">Flagged Entries</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center">
+                    @if (Model.AthleteDetail.JournalEntries.Any())
+                    {
+                        var firstEntry = Model.AthleteDetail.JournalEntries.OrderBy(e => e.EntryDate).First();
+                        var lastEntry = Model.AthleteDetail.JournalEntries.OrderByDescending(e => e.EntryDate).First();
+                        <div class="fs-6 fw-bold text-primary">
+                            @firstEntry.EntryDate.ToString("MMM dd, yyyy")
+                        </div>
+                        <div class="text-muted small">to</div>
+                        <div class="fs-6 fw-bold text-primary">
+                            @lastEntry.EntryDate.ToString("MMM dd, yyyy")
+                        </div>
+                        <div class="text-muted">Date Range</div>
+                    }
+                    else
+                    {
+                        <div class="fs-6 text-muted">No entries yet</div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (!Model.AthleteDetail.JournalEntries.Any())
+    {
+        <div class="row">
+            <div class="col-12">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body text-center py-5">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" fill="currentColor" class="bi bi-journal-x text-muted mb-3" viewBox="0 0 16 16">
+                            <path fill-rule="evenodd" d="M6.146 6.146a.5.5 0 0 1 .708 0L8 7.293l1.146-1.147a.5.5 0 1 1 .708.708L8.707 8l1.147 1.146a.5.5 0 0 1-.708.708L8 8.707 6.854 9.854a.5.5 0 0 1-.708-.708L7.293 8 6.146 6.854a.5.5 0 0 1 0-.708"/>
+                            <path d="M3 0h10a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2v-1h1v1a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H3a1 1 0 0 0-1 1v1H1V2a2 2 0 0 1 2-2"/>
+                            <path d="M1 5v-.5a.5.5 0 0 1 1 0V5h.5a.5.5 0 0 1 0 1h-2a.5.5 0 0 1 0-1zm0 3v-.5a.5.5 0 0 1 1 0V8h.5a.5.5 0 0 1 0 1h-2a.5.5 0 0 1 0-1zm0 3v-.5a.5.5 0 0 1 1 0v.5h.5a.5.5 0 0 1 0 1h-2a.5.5 0 0 1 0-1z"/>
+                        </svg>
+                        <h4 class="text-muted mb-3">No Journal Entries Yet</h4>
+                        <p class="text-muted mb-0">This athlete hasn't created any journal entries.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <h3 class="h5 text-muted mb-0">Journal Entries (@Model.AthleteDetail.JournalEntries.Count)</h3>
+            </div>
+            <div class="col-md-6 text-md-end">
+                <div class="btn-group" role="group" aria-label="Filter entries">
+                    <button type="button" class="btn btn-outline-primary btn-sm active" id="showAllBtn" onclick="filterEntries('all')">
+                        Show All
+                    </button>
+                    <button type="button" class="btn btn-outline-danger btn-sm" id="showFlaggedBtn" onclick="filterEntries('flagged')">
+                        Flagged Only (@Model.AthleteDetail.FlaggedEntriesCount)
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-12">
+                @{
+                    // Sort: Flagged entries first, then by date descending
+                    var sortedEntries = Model.AthleteDetail.JournalEntries
+                        .OrderByDescending(e => e.IsFlagged)
+                        .ThenByDescending(e => e.EntryDate);
+                }
+                @foreach (var entry in sortedEntries)
+                {
+                    var preview = entry.EmotionalState.Length > 150 ? entry.EmotionalState.Substring(0, 150) + "..." : entry.EmotionalState;
+                    var entryId = "entry-" + entry.Id;
+
+                    <div class="card mb-3 border-0 shadow-sm @(entry.IsFlagged ? "border-danger border-start border-4" : "") entry-card" data-flagged="@entry.IsFlagged.ToString().ToLower()">
+                        @if (entry.IsFlagged)
+                        {
+                            <div class="alert alert-danger mb-0 rounded-0 rounded-top py-2 px-3 d-flex align-items-center justify-content-center" style="border-left: 0; border-right: 0; border-top: 0;">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-exclamation-triangle-fill me-2" viewBox="0 0 16 16">
+                                    <path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5m.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2"/>
+                                </svg>
+                                <strong class="mb-0">FLAGGED FOR REVIEW</strong>
+                            </div>
+                        }
+                        <div class="card-header bg-white border-bottom-0 py-3">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h5 class="mb-1 fw-bold">
+                                        @entry.EntryDate.ToString("MMMM dd, yyyy")
+                                    </h5>
+                                    <p class="text-muted small mb-0">
+                                        Created: @entry.CreatedAt.ToString("MMM dd, yyyy h:mm tt")
+                                    </p>
+                                </div>
+                                @if (entry.IsFlagged)
+                                {
+                                    <span class="badge bg-danger px-3 py-2 fs-6">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-flag-fill" viewBox="0 0 16 16">
+                                            <path d="M14.778.085A.5.5 0 0 1 15 .5V8a.5.5 0 0 1-.314.464L14.5 8l.186.464-.003.001-.006.003-.023.009a12 12 0 0 1-.397.15c-.264.095-.631.223-1.047.35-.816.252-1.879.523-2.71.523-.847 0-1.548-.28-2.158-.525l-.028-.01C7.68 8.71 7.14 8.5 6.5 8.5c-.7 0-1.638.23-2.437.477A20 20 0 0 0 3 9.342V15.5a.5.5 0 0 1-1 0V.5a.5.5 0 0 1 1 0v.282c.226-.079.496-.17.79-.26C4.606.272 5.67 0 6.5 0c.84 0 1.524.277 2.121.519l.043.018C9.286.788 9.828 1 10.5 1c.7 0 1.638-.23 2.437-.477a20 20 0 0 0 1.349-.476l.019-.007.004-.002h.001"/>
+                                        </svg>
+                                        Flagged
+                                    </span>
+                                }
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <p class="text-muted mb-2"><strong>Emotional State:</strong></p>
+                                <p class="entry-preview">@preview</p>
+                            </div>
+
+                            <div class="collapse" id="@entryId">
+                                <hr class="my-3">
+
+                                <div class="mb-4">
+                                    <h6 class="text-primary fw-bold mb-2">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-emoji-smile" viewBox="0 0 16 16">
+                                            <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
+                                            <path d="M4.285 9.567a.5.5 0 0 1 .683.183A3.5 3.5 0 0 0 8 11.5a3.5 3.5 0 0 0 3.032-1.75.5.5 0 1 1 .866.5A4.5 4.5 0 0 1 8 12.5a4.5 4.5 0 0 1-3.898-2.25.5.5 0 0 1 .183-.683M7 6.5C7 7.328 6.552 8 6 8s-1-.672-1-1.5S5.448 5 6 5s1 .672 1 1.5m4 0c0 .828-.448 1.5-1 1.5s-1-.672-1-1.5S9.448 5 10 5s1 .672 1 1.5"/>
+                                        </svg>
+                                        How are you feeling emotionally right now?
+                                    </h6>
+                                    <p class="ps-3">@entry.EmotionalState</p>
+                                </div>
+
+                                <div class="mb-4">
+                                    <h6 class="text-primary fw-bold mb-2">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-chat-dots" viewBox="0 0 16 16">
+                                            <path d="M5 8a1 1 0 1 1-2 0 1 1 0 0 1 2 0m4 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0m3 1a1 1 0 1 0 0-2 1 1 0 0 0 0 2"/>
+                                            <path d="m2.165 15.803.02-.004c1.83-.363 2.948-.842 3.468-1.105A9 9 0 0 0 8 15c4.418 0 8-3.134 8-7s-3.582-7-8-7-8 3.134-8 7c0 1.76.743 3.37 1.97 4.6a10.4 10.4 0 0 1-.524 2.318l-.003.011a11 11 0 0 1-.244.637c-.079.186.074.394.273.362a22 22 0 0 0 .693-.125m.8-3.108a1 1 0 0 0-.287-.801C1.618 10.83 1 9.468 1 8c0-3.192 2.686-6 7-6s7 2.808 7 6-2.686 6-7 6a8 8 0 0 1-2.088-.272 1 1 0 0 0-.711.074c-.387.196-1.24.57-2.634.893a11 11 0 0 0 .398-2"/>
+                                        </svg>
+                                        Reflect on your most recent training session or competition
+                                    </h6>
+                                    <p class="ps-3">@entry.SessionReflection</p>
+                                </div>
+
+                                <div class="mb-4">
+                                    <h6 class="text-primary fw-bold mb-2">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-exclamation-triangle" viewBox="0 0 16 16">
+                                            <path d="M7.938 2.016A.13.13 0 0 1 8.002 2a.13.13 0 0 1 .063.016.15.15 0 0 1 .054.057l6.857 11.667c.036.06.035.124.002.183a.2.2 0 0 1-.054.06.1.1 0 0 1-.066.017H1.146a.1.1 0 0 1-.066-.017.2.2 0 0 1-.054-.06.18.18 0 0 1 .002-.183L7.884 2.073a.15.15 0 0 1 .054-.057m1.044-.45a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767z"/>
+                                            <path d="M7.002 12a1 1 0 1 1 2 0 1 1 0 0 1-2 0M7.1 5.995a.905.905 0 1 1 1.8 0l-.35 3.507a.552.552 0 0 1-1.1 0z"/>
+                                        </svg>
+                                        What mental barriers or challenges are you facing?
+                                    </h6>
+                                    <p class="ps-3">@entry.MentalBarriers</p>
+                                </div>
+                            </div>
+
+                            <div class="d-flex gap-2 mt-3">
+                                <button class="btn btn-outline-primary btn-sm flex-grow-1" type="button"
+                                        data-bs-toggle="collapse" data-bs-target="#@entryId"
+                                        aria-expanded="false" aria-controls="@entryId">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-chevron-down" viewBox="0 0 16 16">
+                                        <path fill-rule="evenodd" d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708"/>
+                                    </svg>
+                                    <span class="expand-text">View Full Entry</span>
+                                </button>
+
+                                @if (entry.IsFlagged)
+                                {
+                                    <form method="post" asp-page-handler="UnflagEntry" asp-route-entryId="@entry.Id" asp-route-athleteId="@Model.AthleteDetail.AthleteId" class="d-inline">
+                                        <button type="submit" class="btn btn-warning btn-sm">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-flag-fill" viewBox="0 0 16 16">
+                                                <path d="M14.778.085A.5.5 0 0 1 15 .5V8a.5.5 0 0 1-.314.464L14.5 8l.186.464-.003.001-.006.003-.023.009a12 12 0 0 1-.397.15c-.264.095-.631.223-1.047.35-.816.252-1.879.523-2.71.523-.847 0-1.548-.28-2.158-.525l-.028-.01C7.68 8.71 7.14 8.5 6.5 8.5c-.7 0-1.638.23-2.437.477A20 20 0 0 0 3 9.342V15.5a.5.5 0 0 1-1 0V.5a.5.5 0 0 1 1 0v.282c.226-.079.496-.17.79-.26C4.606.272 5.67 0 6.5 0c.84 0 1.524.277 2.121.519l.043.018C9.286.788 9.828 1 10.5 1c.7 0 1.638-.23 2.437-.477a20 20 0 0 0 1.349-.476l.019-.007.004-.002h.001"/>
+                                            </svg>
+                                            Unflag
+                                        </button>
+                                    </form>
+                                }
+                                else
+                                {
+                                    <form method="post" asp-page-handler="FlagEntry" asp-route-entryId="@entry.Id" asp-route-athleteId="@Model.AthleteDetail.AthleteId" class="d-inline">
+                                        <button type="submit" class="btn btn-outline-danger btn-sm">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-flag-fill" viewBox="0 0 16 16">
+                                                <path d="M14.778.085A.5.5 0 0 1 15 .5V8a.5.5 0 0 1-.314.464L14.5 8l.186.464-.003.001-.006.003-.023.009a12 12 0 0 1-.397.15c-.264.095-.631.223-1.047.35-.816.252-1.879.523-2.71.523-.847 0-1.548-.28-2.158-.525l-.028-.01C7.68 8.71 7.14 8.5 6.5 8.5c-.7 0-1.638.23-2.437.477A20 20 0 0 0 3 9.342V15.5a.5.5 0 0 1-1 0V.5a.5.5 0 0 1 1 0v.282c.226-.079.496-.17.79-.26C4.606.272 5.67 0 6.5 0c.84 0 1.524.277 2.121.519l.043.018C9.286.788 9.828 1 10.5 1c.7 0 1.638-.23 2.437-.477a20 20 0 0 0 1.349-.476l.019-.007.004-.002h.001"/>
+                                            </svg>
+                                            Flag Entry
+                                        </button>
+                                    </form>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+}
+
+@section Scripts {
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+
+    <script>
+        // Filter entries function
+        function filterEntries(filter) {
+            const allBtn = document.getElementById('showAllBtn');
+            const flaggedBtn = document.getElementById('showFlaggedBtn');
+            const entries = document.querySelectorAll('.entry-card');
+
+            // Update button states
+            if (filter === 'all') {
+                allBtn.classList.add('active');
+                flaggedBtn.classList.remove('active');
+
+                // Show all entries
+                entries.forEach(function(entry) {
+                    entry.style.display = 'block';
+                });
+            } else if (filter === 'flagged') {
+                allBtn.classList.remove('active');
+                flaggedBtn.classList.add('active');
+
+                // Show only flagged entries
+                entries.forEach(function(entry) {
+                    const isFlagged = entry.getAttribute('data-flagged') === 'true';
+                    entry.style.display = isFlagged ? 'block' : 'none';
+                });
+            }
+        }
+
+        // Handle expand/collapse button text
+        document.addEventListener('DOMContentLoaded', function() {
+            const collapseElements = document.querySelectorAll('.collapse');
+
+            collapseElements.forEach(function(collapseEl) {
+                const button = document.querySelector('[data-bs-target="#' + collapseEl.id + '"]');
+
+                collapseEl.addEventListener('show.bs.collapse', function() {
+                    button.querySelector('.expand-text').textContent = 'Hide Full Entry';
+                    button.querySelector('svg').style.transform = 'rotate(180deg)';
+                });
+
+                collapseEl.addEventListener('hide.bs.collapse', function() {
+                    button.querySelector('.expand-text').textContent = 'View Full Entry';
+                    button.querySelector('svg').style.transform = 'rotate(0deg)';
+                });
+            });
+        });
+    </script>
+}

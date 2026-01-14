@@ -1,0 +1,20 @@
+@page
+@model MindSetCoach.Web.Pages.Journal.IndexModel
+@{
+    ViewData["Title"] = "Journal";
+}
+
+<div class="row">
+    <div class="col-12">
+        <h1>Welcome to your Journal</h1>
+        <p class="lead">This is a placeholder page. Journal functionality will be implemented next.</p>
+
+        @if (!string.IsNullOrEmpty(Model.UserEmail))
+        {
+            <div class="alert alert-info">
+                <p class="mb-0">You are logged in as: <strong>@Model.UserEmail</strong></p>
+                <p class="mb-0">Role: <strong>@Model.UserRole</strong></p>
+            </div>
+        }
+    </div>
+</div>

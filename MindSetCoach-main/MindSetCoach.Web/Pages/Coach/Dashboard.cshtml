@@ -1,0 +1,160 @@
+@page
+@model MindSetCoach.Web.Pages.Coach.DashboardModel
+@{
+    ViewData["Title"] = "My Athletes";
+}
+
+<div class="row mb-4">
+    <div class="col-12">
+        <h1 class="display-5 fw-bold text-primary">My Athletes</h1>
+        <p class="lead text-muted">Monitor your athletes' mental training progress</p>
+    </div>
+</div>
+
+@if (!string.IsNullOrEmpty(Model.ErrorMessage))
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <strong>Error:</strong> @Model.ErrorMessage
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+@if (Model.Athletes == null || Model.Athletes.Count == 0)
+{
+    <div class="row">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center py-5">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" fill="currentColor" class="bi bi-people text-muted mb-3" viewBox="0 0 16 16">
+                        <path d="M15 14s1 0 1-1-1-4-5-4-5 3-5 4 1 1 1 1zm-7.978-1L7 12.996c.001-.264.167-1.03.76-1.72C8.312 10.629 9.282 10 11 10c1.717 0 2.687.63 3.24 1.276.593.69.758 1.457.76 1.72l-.008.002-.014.002zM11 7a2 2 0 1 0 0-4 2 2 0 0 0 0 4m3-2a3 3 0 1 1-6 0 3 3 0 0 1 6 0M6.936 9.28a6 6 0 0 0-1.23-.247A7 7 0 0 0 5 9c-4 0-5 3-5 4q0 1 1 1h4.216A2.24 2.24 0 0 1 5 13c0-1.01.377-2.042 1.09-2.904.243-.294.526-.569.846-.816M4.92 10A5.5 5.5 0 0 0 4 13H1c0-.26.164-1.03.76-1.724.545-.636 1.492-1.256 3.16-1.275ZM1.5 5.5a3 3 0 1 1 6 0 3 3 0 0 1-6 0m3-2a2 2 0 1 0 0 4 2 2 0 0 0 0-4"/>
+                    </svg>
+                    <h4 class="text-muted mb-3">No Athletes Assigned Yet</h4>
+                    <p class="text-muted mb-0">Athletes will appear here when they register with your email.</p>
+                    <p class="text-muted">They can sign up and select you as their coach during registration.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    <div class="row mb-3">
+        <div class="col-12">
+            <p class="text-muted mb-0">
+                <strong>@Model.Athletes.Count</strong> athlete@(Model.Athletes.Count == 1 ? "" : "s") assigned
+            </p>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        @{
+            // Sort athletes: Flagged entries first, then by last entry date
+            var sortedAthletes = Model.Athletes
+                .OrderByDescending(a => a.FlaggedEntriesCount > 0)
+                .ThenByDescending(a => a.LastEntryDate ?? DateTime.MinValue);
+        }
+        @foreach (var athlete in sortedAthletes)
+        {
+            var needsAttention = false;
+            var warningMessage = "";
+
+            // Check if no entries in last 7 days
+            if (athlete.LastEntryDate == null || athlete.LastEntryDate < DateTime.Now.AddDays(-7))
+            {
+                needsAttention = true;
+                if (athlete.LastEntryDate == null)
+                {
+                    warningMessage = "No journal entries yet";
+                }
+                else
+                {
+                    var daysSince = (DateTime.Now - athlete.LastEntryDate.Value).Days;
+                    warningMessage = $"No entries in {daysSince} days";
+                }
+            }
+
+            var hasFlaggedEntries = athlete.FlaggedEntriesCount > 0;
+
+            <div class="col-md-6 col-lg-4">
+                <div class="card h-100 border-0 shadow-sm @(hasFlaggedEntries ? "border-danger border-start border-4" : needsAttention ? "border-warning border-start border-4" : "")">
+                    @if (hasFlaggedEntries)
+                    {
+                        <div class="alert alert-danger mb-0 rounded-0 rounded-top py-2 px-3 d-flex align-items-center justify-content-between" style="border-left: 0; border-right: 0; border-top: 0;">
+                            <span>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-exclamation-triangle-fill me-1" viewBox="0 0 16 16">
+                                    <path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5m.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2"/>
+                                </svg>
+                                <strong>@athlete.FlaggedEntriesCount Flagged @(athlete.FlaggedEntriesCount == 1 ? "Entry" : "Entries")</strong>
+                            </span>
+                        </div>
+                    }
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <div>
+                                <h5 class="card-title mb-1 fw-bold">@athlete.Name</h5>
+                                <p class="text-muted small mb-0">@athlete.Email</p>
+                            </div>
+                            @if (hasFlaggedEntries)
+                            {
+                                <span class="badge bg-danger rounded-pill fs-6">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" class="bi bi-flag-fill" viewBox="0 0 16 16">
+                                        <path d="M14.778.085A.5.5 0 0 1 15 .5V8a.5.5 0 0 1-.314.464L14.5 8l.186.464-.003.001-.006.003-.023.009a12 12 0 0 1-.397.15c-.264.095-.631.223-1.047.35-.816.252-1.879.523-2.71.523-.847 0-1.548-.28-2.158-.525l-.028-.01C7.68 8.71 7.14 8.5 6.5 8.5c-.7 0-1.638.23-2.437.477A20 20 0 0 0 3 9.342V15.5a.5.5 0 0 1-1 0V.5a.5.5 0 0 1 1 0v.282c.226-.079.496-.17.79-.26C4.606.272 5.67 0 6.5 0c.84 0 1.524.277 2.121.519l.043.018C9.286.788 9.828 1 10.5 1c.7 0 1.638-.23 2.437-.477a20 20 0 0 0 1.349-.476l.019-.007.004-.002h.001"/>
+                                    </svg>
+                                    @athlete.FlaggedEntriesCount
+                                </span>
+                            }
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="row g-2">
+                                <div class="col-6">
+                                    <div class="text-center p-2 bg-light rounded">
+                                        <div class="fs-4 fw-bold text-primary">@athlete.TotalEntries</div>
+                                        <div class="small text-muted">Total Entries</div>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="text-center p-2 bg-light rounded">
+                                        <div class="fs-6 fw-bold @(needsAttention ? "text-warning" : "text-success")">
+                                            @if (athlete.LastEntryDate != null)
+                                            {
+                                                @athlete.LastEntryDate.Value.ToString("MMM dd")
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">Never</span>
+                                            }
+                                        </div>
+                                        <div class="small text-muted">Last Entry</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        @if (needsAttention)
+                        {
+                            <div class="alert alert-warning py-2 px-3 mb-3 small">
+                                <i class="bi bi-exclamation-triangle-fill"></i> @warningMessage
+                            </div>
+                        }
+
+                        <div class="d-grid">
+                            <a href="/Coach/AthleteDetail?athleteId=@athlete.AthleteId" class="btn @(hasFlaggedEntries ? "btn-danger" : "btn-outline-primary")">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-journal-text" viewBox="0 0 16 16">
+                                    <path d="M5 10.5a.5.5 0 0 1 .5-.5h2a.5.5 0 0 1 0 1h-2a.5.5 0 0 1-.5-.5m0-2a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5m0-2a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5m0-2a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5"/>
+                                    <path d="M3 0h10a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2v-1h1v1a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H3a1 1 0 0 0-1 1v1H1V2a2 2 0 0 1 2-2"/>
+                                    <path d="M1 5v-.5a.5.5 0 0 1 1 0V5h.5a.5.5 0 0 1 0 1h-2a.5.5 0 0 1 0-1zm0 3v-.5a.5.5 0 0 1 1 0V8h.5a.5.5 0 0 1 0 1h-2a.5.5 0 0 1 0-1zm0 3v-.5a.5.5 0 0 1 1 0v.5h.5a.5.5 0 0 1 0 1h-2a.5.5 0 0 1 0-1z"/>
+                                </svg>
+                                @(hasFlaggedEntries ? "Review Flagged Entries" : "View Entries")
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+@section Scripts {
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+}

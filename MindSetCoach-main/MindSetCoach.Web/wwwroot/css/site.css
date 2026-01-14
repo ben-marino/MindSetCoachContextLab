@@ -1,0 +1,159 @@
+html {
+  font-size: 14px;
+}
+
+@media (min-width: 768px) {
+  html {
+    font-size: 16px;
+  }
+}
+
+.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
+  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+}
+
+html {
+  position: relative;
+  min-height: 100%;
+}
+
+body {
+  margin-bottom: 60px;
+}
+
+/* Journal Form Mobile Optimization */
+.journal-form .form-control {
+  font-size: 16px; /* Prevents zoom on iOS */
+  line-height: 1.6;
+}
+
+.journal-form textarea.form-control {
+  resize: vertical;
+  min-height: 100px;
+}
+
+.journal-form .card {
+  border-radius: 12px;
+  border: 1px solid #e0e0e0;
+}
+
+.journal-form .card-body {
+  padding: 1.5rem;
+}
+
+/* Mobile-specific adjustments */
+@media (max-width: 768px) {
+  .journal-form .card-body {
+    padding: 1.25rem;
+  }
+
+  .journal-form .form-label {
+    font-size: 1.1rem;
+  }
+
+  .journal-form textarea.form-control {
+    font-size: 16px;
+  }
+
+  .journal-form .btn-lg {
+    font-size: 1.15rem;
+    padding: 1rem;
+  }
+}
+
+/* Touch-friendly spacing */
+.journal-form .form-control,
+.journal-form .btn {
+  min-height: 44px; /* iOS recommended touch target */
+}
+
+.journal-form textarea.form-control {
+  min-height: 100px;
+}
+
+/* Better focus states for mobile */
+.journal-form .form-control:focus {
+  border-color: #0d6efd;
+  box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+}
+
+/* Navigation pills styling */
+.nav-pills .nav-link {
+  border-radius: 8px;
+  padding: 0.75rem 1.5rem;
+}
+
+.nav-pills .nav-link.active {
+  background-color: #0d6efd;
+}
+
+/* Improved card shadows */
+.shadow-sm {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
+}
+
+/* Entries List Styling */
+.entry-card {
+  border-radius: 12px;
+  border: 1px solid #e0e0e0;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.entry-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12) !important;
+}
+
+.entry-preview {
+  line-height: 1.6;
+}
+
+.entry-preview p {
+  color: #333;
+  font-size: 0.95rem;
+}
+
+/* Entry Detail View */
+.entry-text {
+  white-space: pre-wrap;
+  line-height: 1.8;
+  font-size: 1rem;
+  color: #333;
+}
+
+/* Mobile responsive header */
+@media (max-width: 576px) {
+  .mb-4.d-flex {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+  }
+
+  .mb-4.d-flex .btn {
+    margin-top: 1rem;
+    width: 100%;
+  }
+}
+
+/* Better badge styling */
+.badge {
+  font-weight: 600;
+  padding: 0.5rem 0.75rem;
+}
+
+/* Card title styling */
+.entry-card .card-title {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #333;
+}
+
+/* Responsive gap utilities */
+.gap-2 {
+  gap: 0.5rem !important;
+}
+
+@media (max-width: 576px) {
+  .gap-2 {
+    gap: 0.75rem !important;
+  }
+}

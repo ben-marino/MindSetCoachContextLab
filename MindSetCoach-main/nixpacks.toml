@@ -1,0 +1,14 @@
+[phases.setup]
+nixPkgs = ["dotnet-sdk_8", "dotnet-runtime_8"]
+nixLibs = ["stdenv.cc.cc.lib"]
+
+[phases.install]
+cmds = ["dotnet restore"]
+
+[phases.build]
+cmds = [
+    "dotnet publish MindSetCoach.Api/MindSetCoach.Api.csproj -c Release -o /app/out --no-restore --runtime linux-x64 --self-contained false"
+]
+
+[start]
+cmd = "dotnet /app/out/MindSetCoach.Api.dll --urls http://0.0.0.0:$PORT"
