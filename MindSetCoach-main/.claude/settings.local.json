@@ -39,7 +39,22 @@
       "Bash(apt-get update:*)",
       "Bash(apt-get install:*)",
       "Bash(__NEW_LINE_bb766319d14871a8__ echo \"=== Database Schema ===\")",
-      "Bash(__NEW_LINE_bb766319d14871a8__ echo \"\")"
+      "Bash(__NEW_LINE_bb766319d14871a8__ echo \"\")",
+      "Bash(tree:*)",
+      "Bash(lsof:*)",
+      "Bash(xargs:*)",
+      "Bash(jq:*)",
+      "Bash(TOKEN=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6IjQiLCJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9lbWFpbGFkZHJlc3MiOiJ0ZXN0Y29hY2hAdGVzdC5jb20iLCJodHRwOi8vc2NoZW1hcy5taWNyb3NvZnQuY29tL3dzLzIwMDgvMDYvaWRlbnRpdHkvY2xhaW1zL3JvbGUiOiJDb2FjaCIsImp0aSI6IjhkZDdkNzA0LTYyNWEtNDYyNC05MzJiLWFmZmUwY2RiM2VmNSIsIkNvYWNoSWQiOiIyIiwiZXhwIjoxNzY4NDI3NDQ4LCJpc3MiOiJNaW5kU2V0Q29hY2giLCJhdWQiOiJNaW5kU2V0Q29hY2hVc2VycyJ9.2jp9Kg55YjcFJVWQvq6up2AiS4pfaP4KivwEZ-AsMXs\")",
+      "Bash(__NEW_LINE_a4e6b0a309c6ed66__ curl -s http://localhost:5000/api/Experiments/runs -H \"Authorization: Bearer $TOKEN\")",
+      "Bash(TOKEN=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6IjQiLCJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9lbWFpbGFkZHJlc3MiOiJ0ZXN0Y29hY2hAdGVzdC5jb20iLCJodHRwOi8vc2NoZW1hcy5taWNyb3NvZnQuY29tL3dzLzIwMDgvMDYvaWRlbnRpdHkvY2xhaW1zL3JvbGUiOiJDb2FjaCIsImp0aSI6IjhkZDdkNzA0LTYyNWEtNDYyNC05MzJiLWFmZmUwY2RiM2VmNSIsIkNvYWNoSWQiOiIyIiwiZXhwIjoxNzY4NDI3NDQ4LCJpc3MiOiJNaW5kU2V0Q29hY2giLCJhdWQiOiJNaW5kU2V0Q29hY2hVc2VycyJ9.2jp9Kg55YjcFJVWQvq6up2AiS4pfaP4KivwEZ-AsMXs\" __NEW_LINE_0f4966090534adbd__ echo \"=== GET /api/experiments/stats ===\" curl -s http://localhost:5000/api/Experiments/stats -H \"Authorization: Bearer $TOKEN\")",
+      "Bash(__NEW_LINE_9329133e05adfa58__ echo \"=== GET /api/experiments/stats ===\")",
+      "Bash(__NEW_LINE_b757c9ff09780c10__ echo \"=== POST /api/experiments/run ===\")",
+      "Bash(__NEW_LINE_e57d0deadc643b30__ sleep 2)",
+      "Bash(__NEW_LINE_e57d0deadc643b30__ echo \"=== GET /api/experiments/runs ===\")",
+      "Bash(__NEW_LINE_e57d0deadc643b30__ echo \"\")",
+      "Bash(TOKEN=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6IjQiLCJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9lbWFpbGFkZHJlc3MiOiJ0ZXN0Y29hY2hAdGVzdC5jb20iLCJodHRwOi8vc2NoZW1hcy5taWNyb3NvZnQuY29tL3dzLzIwMDgvMDYvaWRlbnRpdHkvY2xhaW1zL3JvbGUiOiJDb2FjaCIsImp0aSI6IjhkZDdkNzA0LTYyNWEtNDYyNC05MzJiLWFmZmUwY2RiM2VmNSIsIkNvYWNoSWQiOiIyIiwiZXhwIjoxNzY4NDI3NDQ4LCJpc3MiOiJNaW5kU2V0Q29hY2giLCJhdWQiOiJNaW5kU2V0Q29hY2hVc2VycyJ9.2jp9Kg55YjcFJVWQvq6up2AiS4pfaP4KivwEZ-AsMXs\" __NEW_LINE_29444fdf723c5f29__ echo \"=== Position Test Run Detail \\(formatted\\) ===\" curl -s http://localhost:5000/api/Experiments/runs/3 -H \"Authorization: Bearer $TOKEN\")",
+      "Bash(python3:*)",
+      "Bash(__NEW_LINE_b565ed5b37c96a2f__ curl -s http://localhost:5000/api/Experiments/runs/3 -H \"Authorization: Bearer $TOKEN\")"
     ],
     "deny": [],
     "ask": []

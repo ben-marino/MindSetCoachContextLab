@@ -25,11 +25,15 @@ public class ExperimentsDbContext : DbContext
             entity.HasIndex(e => e.AthleteId);
             entity.HasIndex(e => e.Status);
             entity.HasIndex(e => e.StartedAt);
+            entity.HasIndex(e => e.IsDeleted);
 
             entity.Property(e => e.EstimatedCost)
                 .HasPrecision(18, 6);
 
             entity.Property(e => e.Status)
+                .HasConversion<string>();
+
+            entity.Property(e => e.ExperimentType)
                 .HasConversion<string>();
         });
 

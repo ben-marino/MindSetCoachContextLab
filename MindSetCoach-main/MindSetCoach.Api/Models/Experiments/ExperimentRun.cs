@@ -10,6 +10,13 @@ public enum ExperimentStatus
     Failed
 }
 
+public enum ExperimentType
+{
+    Position,
+    Persona,
+    Compression
+}
+
 public class ExperimentRun
 {
     [Key]
@@ -34,6 +41,13 @@ public class ExperimentRun
     [MaxLength(50)]
     public string Persona { get; set; } = string.Empty;
 
+    public ExperimentType ExperimentType { get; set; } = ExperimentType.Persona;
+
+    public int EntriesUsed { get; set; }
+
+    [MaxLength(20)]
+    public string EntryOrder { get; set; } = "reverse";
+
     public DateTime StartedAt { get; set; } = DateTime.UtcNow;
 
     public DateTime? CompletedAt { get; set; }
@@ -43,6 +57,8 @@ public class ExperimentRun
     public decimal EstimatedCost { get; set; }
 
     public ExperimentStatus Status { get; set; } = ExperimentStatus.Pending;
+
+    public bool IsDeleted { get; set; } = false;
 
     // Navigation properties
     public ICollection<ExperimentClaim> Claims { get; set; } = new List<ExperimentClaim>();

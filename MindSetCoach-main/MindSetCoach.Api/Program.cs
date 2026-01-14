@@ -107,6 +107,9 @@ try
     // Register ContextExperimentLogger as scoped (needs DbContext)
     builder.Services.AddScoped<ContextExperimentLogger>();
 
+    // Register ExperimentRunnerService as singleton (manages background tasks)
+    builder.Services.AddSingleton<IExperimentRunnerService, ExperimentRunnerService>();
+
     // Register application services
     builder.Services.AddScoped<IAuthService, AuthService>();
     builder.Services.AddScoped<IJournalService, JournalService>();
