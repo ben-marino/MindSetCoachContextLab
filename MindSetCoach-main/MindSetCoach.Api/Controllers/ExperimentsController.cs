@@ -282,4 +282,89 @@ public class ExperimentsController : ControllerBase
         var summary = await _experimentLogger.GetSummaryAsync();
         return Ok(summary);
     }
+
+    #region Preset Endpoints
+
+    /// <summary>
+    /// Get all experiment presets.
+    /// </summary>
+    /// <returns>List of experiment presets</returns>
+    [HttpGet("presets")]
+    [ProducesResponseType(typeof(List<ExperimentPresetDto>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<List<ExperimentPresetDto>>> GetPresets()
+    {
+        var presets = await _dbContext.ExperimentPresets
+            .OrderByDescending(p => p.IsDefault)
+            .ThenBy(p => p.Name)
+            .ToListAsync();
+
+        var dtos = presets.Select(p => p.ToDto()).ToList();
+        return Ok(dtos);
+    }
+
+    /// <summary>
+    /// Create a new experiment preset.
+    /// </summary>
+    /// <param name="request">Preset configuration</param>
+    /// <returns>Created preset</returns>
+    [HttpPost("presets")]
+    [ProducesResponseType(typeof(ExperimentPresetDto), StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<ExperimentPresetDto>> CreatePreset([FromBody] CreatePresetRequest request)
+    {
+        if (string.IsNullOrWhiteSpace(request.Name))
+        {
+            return BadRequest(new { error = "Name is required" });
+        }
+
+        // Check for duplicate name
+        var exists = await _dbContext.ExperimentPresets
+            .AnyAsync(p => p.Name.ToLower() == request.Name.ToLower());
+
+        if (exists)
+        {
+            return BadRequest(new { error = $"A preset with the name '{request.Name}' already exists" });
+        }
+
+        var preset = request.ToEntity();
+        _dbContext.ExperimentPresets.Add(preset);
+        await _dbContext.SaveChangesAsync();
+
+        _logger.LogInformation("Created experiment preset: {Name}", preset.Name);
+
+        return CreatedAtAction(nameof(GetPresets), preset.ToDto());
+    }
+
+    /// <summary>
+    /// Delete an experiment preset.
+    /// </summary>
+    /// <param name="id">Preset ID</param>
+    /// <returns>No content on success</returns>
+    [HttpDelete("presets/{id}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult> DeletePreset(int id)
+    {
+        var preset = await _dbContext.ExperimentPresets.FindAsync(id);
+
+        if (preset == null)
+        {
+            return NotFound(new { error = $"Preset {id} not found" });
+        }
+
+        if (preset.IsDefault)
+        {
+            return BadRequest(new { error = "Cannot delete default presets" });
+        }
+
+        _dbContext.ExperimentPresets.Remove(preset);
+        await _dbContext.SaveChangesAsync();
+
+        _logger.LogInformation("Deleted experiment preset: {Id} - {Name}", id, preset.Name);
+
+        return NoContent();
+    }
+
+    #endregion
 }

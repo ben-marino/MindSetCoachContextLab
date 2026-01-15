@@ -192,6 +192,9 @@ try
         // Apply experiments database migrations
         var experimentsDb = scope.ServiceProvider.GetRequiredService<ExperimentsDbContext>();
         experimentsDb.Database.Migrate();
+
+        // Seed default experiment presets if they don't exist
+        SeedDefaultPresets(experimentsDb);
     }
 
     // Configure the HTTP request pipeline
@@ -251,4 +254,107 @@ catch (Exception ex)
     }
     Console.WriteLine("===========================");
     throw;
+}
+
+/// <summary>
+/// Seeds default experiment presets if they don't exist.
+/// </summary>
+static void SeedDefaultPresets(ExperimentsDbContext db)
+{
+    // Check if default presets already exist
+    if (db.ExperimentPresets.Any(p => p.IsDefault))
+    {
+        return;
+    }
+
+    Console.WriteLine("Seeding default experiment presets...");
+
+    var defaultPresets = new[]
+    {
+        new MindSetCoach.Api.Models.Experiments.ExperimentPreset
+        {
+            Name = "Quick U-Curve Test",
+            Description = "Position test with 7 entries using gpt-4o-mini to test needle retrieval across context positions",
+            Config = System.Text.Json.JsonSerializer.Serialize(new
+            {
+                experimentType = "position",
+                provider = "openai",
+                model = "gpt-4o-mini",
+                temperature = 0.7,
+                maxEntries = 7,
+                entryOrder = "reverse",
+                needleFact = "The athlete mentioned they want to improve their free throw percentage to 85%"
+            }),
+            IsDefault = true,
+            CreatedAt = DateTime.UtcNow
+        },
+        new MindSetCoach.Api.Models.Experiments.ExperimentPreset
+        {
+            Name = "Persona War",
+            Description = "Compare Goggins (intense motivator) vs Lasso (supportive coach) persona responses",
+            Config = System.Text.Json.JsonSerializer.Serialize(new
+            {
+                experimentType = "persona",
+                provider = "openai",
+                model = "gpt-4o-mini",
+                persona = "goggins",
+                comparePersona = "lasso",
+                temperature = 0.7,
+                entryOrder = "reverse"
+            }),
+            IsDefault = true,
+            CreatedAt = DateTime.UtcNow
+        },
+        new MindSetCoach.Api.Models.Experiments.ExperimentPreset
+        {
+            Name = "Budget vs Premium",
+            Description = "Compare DeepSeek (budget) vs Claude Sonnet 4 (premium) with identical prompts",
+            Config = System.Text.Json.JsonSerializer.Serialize(new
+            {
+                experimentType = "persona",
+                provider = "deepseek",
+                model = "deepseek-chat",
+                persona = "lasso",
+                temperature = 0.7,
+                entryOrder = "reverse",
+                providerSweep = new[]
+                {
+                    new { provider = "deepseek", model = "deepseek-chat" },
+                    new { provider = "anthropic", model = "claude-sonnet-4-20250514" }
+                }
+            }),
+            IsDefault = true,
+            CreatedAt = DateTime.UtcNow
+        },
+        new MindSetCoach.Api.Models.Experiments.ExperimentPreset
+        {
+            Name = "Full Provider Sweep",
+            Description = "Position test across all 5 providers to compare context handling",
+            Config = System.Text.Json.JsonSerializer.Serialize(new
+            {
+                experimentType = "position",
+                provider = "openai",
+                model = "gpt-4o-mini",
+                temperature = 0.7,
+                maxEntries = 7,
+                entryOrder = "reverse",
+                needleFact = "The athlete set a personal goal of running a sub-4 minute mile",
+                providerSweep = new[]
+                {
+                    new { provider = "openai", model = "gpt-4o-mini" },
+                    new { provider = "openai", model = "gpt-4o" },
+                    new { provider = "anthropic", model = "claude-sonnet-4-20250514" },
+                    new { provider = "deepseek", model = "deepseek-chat" },
+                    new { provider = "ollama", model = "llama3.2" }
+                }
+            }),
+            IsDefault = true,
+            CreatedAt = DateTime.UtcNow
+        }
+    };
+
+    db.ExperimentPresets.AddRange(defaultPresets);
+    db.SaveChanges();
+
+    Console.WriteLine($"Seeded {defaultPresets.Length} default experiment presets.");
 }

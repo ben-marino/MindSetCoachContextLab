@@ -14,6 +14,7 @@ public class ExperimentsDbContext : DbContext
     public DbSet<ExperimentClaim> ExperimentClaims { get; set; } = null!;
     public DbSet<ClaimReceipt> ClaimReceipts { get; set; } = null!;
     public DbSet<PositionTest> PositionTests { get; set; } = null!;
+    public DbSet<ExperimentPreset> ExperimentPresets { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -67,6 +68,14 @@ public class ExperimentsDbContext : DbContext
 
             entity.Property(e => e.Position)
                 .HasConversion<string>();
+        });
+
+        // ExperimentPreset configuration
+        modelBuilder.Entity<ExperimentPreset>(entity =>
+        {
+            entity.HasIndex(e => e.Name);
+            entity.HasIndex(e => e.IsDefault);
+            entity.HasIndex(e => e.CreatedAt);
         });
     }
 }

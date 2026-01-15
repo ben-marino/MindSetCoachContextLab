@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json;
 using MindSetCoach.Api.Models.Experiments;
 
 namespace MindSetCoach.Api.DTOs;
@@ -31,6 +32,52 @@ public class RunExperimentRequest
     public string EntryOrder { get; set; } = "reverse";
 
     public string? NeedleFact { get; set; } // For position tests
+}
+
+/// <summary>
+/// Request body for creating a new experiment preset.
+/// </summary>
+public class CreatePresetRequest
+{
+    [Required]
+    [MaxLength(100)]
+    public string Name { get; set; } = string.Empty;
+
+    [MaxLength(500)]
+    public string Description { get; set; } = string.Empty;
+
+    [Required]
+    public PresetConfigDto Config { get; set; } = new();
+}
+
+/// <summary>
+/// Configuration settings stored in a preset.
+/// </summary>
+public class PresetConfigDto
+{
+    public string ExperimentType { get; set; } = "persona";
+    public string Provider { get; set; } = string.Empty;
+    public string Model { get; set; } = string.Empty;
+    public string? Persona { get; set; }
+    public string? ComparePersona { get; set; } // For persona comparison experiments
+    public double Temperature { get; set; } = 0.7;
+    public int? MaxEntries { get; set; }
+    public string EntryOrder { get; set; } = "reverse";
+    public string? NeedleFact { get; set; }
+
+    /// <summary>
+    /// For provider sweep: list of providers to test.
+    /// </summary>
+    public List<ProviderModelPair>? ProviderSweep { get; set; }
+}
+
+/// <summary>
+/// Provider and model pair for provider sweep experiments.
+/// </summary>
+public class ProviderModelPair
+{
+    public string Provider { get; set; } = string.Empty;
+    public string Model { get; set; } = string.Empty;
 }
 
 #endregion
@@ -153,6 +200,19 @@ public class ExperimentProgressEvent
     public DateTime Timestamp { get; set; } = DateTime.UtcNow;
 }
 
+/// <summary>
+/// Response DTO for experiment preset.
+/// </summary>
+public class ExperimentPresetDto
+{
+    public int Id { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
+    public PresetConfigDto Config { get; set; } = new();
+    public DateTime CreatedAt { get; set; }
+    public bool IsDefault { get; set; }
+}
+
 #endregion
 
 #region Mapping Extensions
@@ -255,6 +315,47 @@ public static class ExperimentDtoMapper
         }
 
         return detail;
+    }
+
+    private static readonly JsonSerializerOptions _jsonOptions = new()
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+        WriteIndented = false
+    };
+
+    public static ExperimentPresetDto ToDto(this ExperimentPreset preset)
+    {
+        PresetConfigDto? config = null;
+        try
+        {
+            config = JsonSerializer.Deserialize<PresetConfigDto>(preset.Config, _jsonOptions);
+        }
+        catch
+        {
+            config = new PresetConfigDto();
+        }
+
+        return new ExperimentPresetDto
+        {
+            Id = preset.Id,
+            Name = preset.Name,
+            Description = preset.Description,
+            Config = config ?? new PresetConfigDto(),
+            CreatedAt = preset.CreatedAt,
+            IsDefault = preset.IsDefault
+        };
+    }
+
+    public static ExperimentPreset ToEntity(this CreatePresetRequest request)
+    {
+        return new ExperimentPreset
+        {
+            Name = request.Name,
+            Description = request.Description,
+            Config = JsonSerializer.Serialize(request.Config, _jsonOptions),
+            CreatedAt = DateTime.UtcNow,
+            IsDefault = false
+        };
     }
 }
 

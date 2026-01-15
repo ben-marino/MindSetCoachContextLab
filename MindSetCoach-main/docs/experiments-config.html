@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Experiment Configuration | MindSetCoach</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        body {
+            background: #f8fafc;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        .config-header {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #a855f7 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 20px;
+            margin-bottom: 2rem;
+            box-shadow: 0 10px 40px rgba(79, 70, 229, 0.3);
+        }
+        .preset-card {
+            border: 2px solid transparent;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .preset-card:hover {
+            border-color: #7c3aed;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(124, 58, 237, 0.2);
+        }
+        .preset-card.selected {
+            border-color: #4f46e5;
+            background: linear-gradient(135deg, #eff6ff 0%, #e0e7ff 100%);
+        }
+        .preset-badge {
+            font-size: 0.7rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 8px;
+        }
+        .preset-badge.default {
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            color: white;
+        }
+        .preset-badge.custom {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            color: white;
+        }
+        .config-section {
+            background: white;
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        .config-section h5 {
+            color: #4f46e5;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+        .form-label {
+            font-weight: 600;
+            color: #374151;
+        }
+        .form-select, .form-control {
+            border-radius: 10px;
+            border: 2px solid #e5e7eb;
+            transition: all 0.2s ease;
+        }
+        .form-select:focus, .form-control:focus {
+            border-color: #7c3aed;
+            box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+        }
+        .btn-run {
+            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+            border: none;
+            border-radius: 12px;
+            padding: 1rem 2rem;
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: white;
+            transition: all 0.3s ease;
+        }
+        .btn-run:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(34, 197, 94, 0.4);
+            color: white;
+        }
+        .btn-save-preset {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            border: none;
+            border-radius: 12px;
+            color: white;
+        }
+        .btn-save-preset:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+            color: white;
+        }
+        .progress-stream {
+            background: #1e293b;
+            border-radius: 12px;
+            padding: 1rem;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 0.85rem;
+            color: #94a3b8;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .progress-stream .progress-line {
+            margin: 0.25rem 0;
+        }
+        .progress-stream .progress-success {
+            color: #22c55e;
+        }
+        .progress-stream .progress-error {
+            color: #ef4444;
+        }
+        .progress-stream .progress-info {
+            color: #3b82f6;
+        }
+        .alert-api {
+            border-radius: 12px;
+            border: none;
+        }
+        .temperature-display {
+            background: linear-gradient(135deg, #fef3c7, #fde68a);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-weight: 700;
+            color: #92400e;
+        }
+    </style>
+</head>
+<body>
+    <div class="container py-4">
+        <!-- Header -->
+        <div class="config-header">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1 class="h2 mb-2"><i class="bi bi-sliders me-2"></i>Experiment Configuration</h1>
+                    <p class="mb-0 opacity-75">Configure and run context engineering experiments</p>
+                </div>
+                <div>
+                    <span class="badge bg-light text-dark me-2" id="apiStatus">
+                        <i class="bi bi-circle-fill text-warning me-1"></i>Checking API...
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- API Connection Alert -->
+        <div class="alert alert-warning alert-api d-none" id="apiAlert">
+            <i class="bi bi-exclamation-triangle me-2"></i>
+            <span id="apiAlertMessage">Cannot connect to API</span>
+        </div>
+
+        <!-- Auth Section -->
+        <div class="config-section" id="authSection">
+            <h5><i class="bi bi-shield-lock me-2"></i>Authentication</h5>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label">Email</label>
+                    <input type="email" class="form-control" id="authEmail" placeholder="coach@example.com">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Password</label>
+                    <input type="password" class="form-control" id="authPassword" placeholder="Password">
+                </div>
+                <div class="col-12">
+                    <button class="btn btn-primary" id="loginBtn" onclick="login()">
+                        <i class="bi bi-box-arrow-in-right me-2"></i>Login
+                    </button>
+                    <span class="ms-3 text-muted" id="authStatus"></span>
+                </div>
+            </div>
+        </div>
+
+        <div id="mainContent" class="d-none">
+            <!-- Preset Selection -->
+            <div class="config-section">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="mb-0"><i class="bi bi-bookmark-star me-2"></i>Experiment Presets</h5>
+                    <button class="btn btn-sm btn-outline-primary" onclick="refreshPresets()">
+                        <i class="bi bi-arrow-clockwise"></i>
+                    </button>
+                </div>
+                <div class="row g-3" id="presetsContainer">
+                    <div class="col-12 text-center py-4 text-muted">
+                        <i class="bi bi-hourglass-split"></i> Loading presets...
+                    </div>
+                </div>
+            </div>
+
+            <!-- Manual Configuration -->
+            <div class="config-section">
+                <h5><i class="bi bi-gear me-2"></i>Configuration</h5>
+                <div class="row g-3">
+                    <!-- Experiment Type -->
+                    <div class="col-md-6">
+                        <label class="form-label">Experiment Type</label>
+                        <select class="form-select" id="experimentType">
+                            <option value="position">Position Test (U-Curve)</option>
+                            <option value="persona">Persona Comparison</option>
+                            <option value="compression">Context Compression</option>
+                        </select>
+                    </div>
+
+                    <!-- Athlete Selection -->
+                    <div class="col-md-6">
+                        <label class="form-label">Athlete</label>
+                        <select class="form-select" id="athleteId">
+                            <option value="">Select an athlete...</option>
+                        </select>
+                    </div>
+
+                    <!-- Provider -->
+                    <div class="col-md-4">
+                        <label class="form-label">Provider</label>
+                        <select class="form-select" id="provider" onchange="updateModels()">
+                            <option value="openai">OpenAI</option>
+                            <option value="anthropic">Anthropic</option>
+                            <option value="deepseek">DeepSeek</option>
+                            <option value="ollama">Ollama (Local)</option>
+                        </select>
+                    </div>
+
+                    <!-- Model -->
+                    <div class="col-md-4">
+                        <label class="form-label">Model</label>
+                        <select class="form-select" id="model">
+                            <option value="gpt-4o-mini">gpt-4o-mini</option>
+                            <option value="gpt-4o">gpt-4o</option>
+                        </select>
+                    </div>
+
+                    <!-- Persona -->
+                    <div class="col-md-4">
+                        <label class="form-label">Persona</label>
+                        <select class="form-select" id="persona">
+                            <option value="lasso">Ted Lasso (Supportive)</option>
+                            <option value="goggins">David Goggins (Intense)</option>
+                        </select>
+                    </div>
+
+                    <!-- Temperature -->
+                    <div class="col-md-6">
+                        <label class="form-label">Temperature</label>
+                        <div class="d-flex align-items-center gap-3">
+                            <input type="range" class="form-range flex-grow-1" id="temperature"
+                                   min="0" max="1" step="0.1" value="0.7" oninput="updateTempDisplay()">
+                            <span class="temperature-display" id="tempDisplay">0.7</span>
+                        </div>
+                    </div>
+
+                    <!-- Max Entries -->
+                    <div class="col-md-6">
+                        <label class="form-label">Max Entries</label>
+                        <input type="number" class="form-control" id="maxEntries" placeholder="All entries" min="1" max="50">
+                    </div>
+
+                    <!-- Entry Order -->
+                    <div class="col-md-6">
+                        <label class="form-label">Entry Order</label>
+                        <select class="form-select" id="entryOrder">
+                            <option value="reverse">Newest First (Reverse)</option>
+                            <option value="chronological">Oldest First (Chronological)</option>
+                        </select>
+                    </div>
+
+                    <!-- Needle Fact (for position tests) -->
+                    <div class="col-md-6" id="needleFactContainer">
+                        <label class="form-label">Needle Fact (for Position Test)</label>
+                        <input type="text" class="form-control" id="needleFact"
+                               placeholder="e.g., The athlete wants to improve their free throw to 85%">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="config-section">
+                <div class="d-flex flex-wrap gap-3 justify-content-between align-items-center">
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-run" onclick="runExperiment()">
+                            <i class="bi bi-play-fill me-2"></i>Run Experiment
+                        </button>
+                        <button class="btn btn-save-preset" data-bs-toggle="modal" data-bs-target="#savePresetModal">
+                            <i class="bi bi-bookmark-plus me-2"></i>Save as Preset
+                        </button>
+                    </div>
+                    <a href="research-demo-6providers.html" class="btn btn-outline-secondary">
+                        <i class="bi bi-bar-chart me-2"></i>View Results Demo
+                    </a>
+                </div>
+            </div>
+
+            <!-- Progress Stream -->
+            <div class="config-section d-none" id="progressSection">
+                <h5><i class="bi bi-terminal me-2"></i>Experiment Progress</h5>
+                <div class="progress-stream" id="progressStream">
+                    <div class="progress-line progress-info">Waiting to start...</div>
+                </div>
+                <div class="mt-3">
+                    <span class="badge bg-secondary" id="runStatus">Ready</span>
+                    <span class="ms-2 text-muted" id="runId"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Save Preset Modal -->
+    <div class="modal fade" id="savePresetModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-bookmark-plus me-2"></i>Save as Preset</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Preset Name</label>
+                        <input type="text" class="form-control" id="presetName" placeholder="My Custom Preset">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Description</label>
+                        <textarea class="form-control" id="presetDescription" rows="3"
+                                  placeholder="Describe what this preset tests..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="savePreset()">
+                        <i class="bi bi-check-lg me-2"></i>Save Preset
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Configuration
+        const API_BASE = 'http://localhost:5000';
+        let authToken = null;
+        let selectedPresetId = null;
+
+        // Model options by provider
+        const modelsByProvider = {
+            openai: [
+                { value: 'gpt-4o-mini', label: 'gpt-4o-mini (Fast, Budget)' },
+                { value: 'gpt-4o', label: 'gpt-4o (Best Quality)' },
+                { value: 'gpt-4-turbo', label: 'gpt-4-turbo' }
+            ],
+            anthropic: [
+                { value: 'claude-sonnet-4-20250514', label: 'Claude Sonnet 4 (Balanced)' },
+                { value: 'claude-3-5-sonnet-20241022', label: 'Claude 3.5 Sonnet' },
+                { value: 'claude-3-haiku-20240307', label: 'Claude 3 Haiku (Fast)' }
+            ],
+            deepseek: [
+                { value: 'deepseek-chat', label: 'DeepSeek Chat (Budget)' },
+                { value: 'deepseek-coder', label: 'DeepSeek Coder' }
+            ],
+            ollama: [
+                { value: 'llama3.2', label: 'Llama 3.2 (Local)' },
+                { value: 'mistral', label: 'Mistral (Local)' },
+                { value: 'codellama', label: 'CodeLlama (Local)' }
+            ]
+        };
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            checkApiStatus();
+            updateModels();
+            updateTempDisplay();
+
+            // Show/hide needle fact based on experiment type
+            document.getElementById('experimentType').addEventListener('change', function() {
+                document.getElementById('needleFactContainer').style.display =
+                    this.value === 'position' ? 'block' : 'none';
+            });
+        });
+
+        async function checkApiStatus() {
+            try {
+                const response = await fetch(`${API_BASE}/health`);
+                if (response.ok) {
+                    document.getElementById('apiStatus').innerHTML =
+                        '<i class="bi bi-circle-fill text-success me-1"></i>API Connected';
+                    document.getElementById('apiAlert').classList.add('d-none');
+                } else {
+                    throw new Error('API not healthy');
+                }
+            } catch (e) {
+                document.getElementById('apiStatus').innerHTML =
+                    '<i class="bi bi-circle-fill text-danger me-1"></i>API Offline';
+                document.getElementById('apiAlert').classList.remove('d-none');
+                document.getElementById('apiAlertMessage').textContent =
+                    'Cannot connect to API at ' + API_BASE + '. Make sure the API server is running.';
+            }
+        }
+
+        async function login() {
+            const email = document.getElementById('authEmail').value;
+            const password = document.getElementById('authPassword').value;
+            const statusEl = document.getElementById('authStatus');
+
+            if (!email || !password) {
+                statusEl.innerHTML = '<span class="text-danger">Please enter email and password</span>';
+                return;
+            }
+
+            statusEl.innerHTML = '<i class="bi bi-hourglass-split"></i> Logging in...';
+
+            try {
+                const response = await fetch(`${API_BASE}/api/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.token) {
+                    authToken = data.token;
+                    statusEl.innerHTML = '<span class="text-success"><i class="bi bi-check-circle me-1"></i>Logged in as ' + email + '</span>';
+                    document.getElementById('authSection').classList.add('bg-success-subtle');
+                    document.getElementById('mainContent').classList.remove('d-none');
+
+                    // Load presets and athletes
+                    loadPresets();
+                    loadAthletes();
+                } else {
+                    statusEl.innerHTML = '<span class="text-danger">' + (data.message || 'Login failed') + '</span>';
+                }
+            } catch (e) {
+                statusEl.innerHTML = '<span class="text-danger">Connection error: ' + e.message + '</span>';
+            }
+        }
+
+        async function loadPresets() {
+            try {
+                const response = await fetch(`${API_BASE}/api/experiments/presets`, {
+                    headers: { 'Authorization': 'Bearer ' + authToken }
+                });
+
+                if (response.ok) {
+                    const presets = await response.json();
+                    renderPresets(presets);
+                } else {
+                    throw new Error('Failed to load presets');
+                }
+            } catch (e) {
+                document.getElementById('presetsContainer').innerHTML =
+                    '<div class="col-12 text-center text-danger py-4"><i class="bi bi-exclamation-triangle me-2"></i>Failed to load presets</div>';
+            }
+        }
+
+        async function refreshPresets() {
+            document.getElementById('presetsContainer').innerHTML =
+                '<div class="col-12 text-center py-4 text-muted"><i class="bi bi-hourglass-split"></i> Loading presets...</div>';
+            await loadPresets();
+        }
+
+        function renderPresets(presets) {
+            const container = document.getElementById('presetsContainer');
+
+            if (!presets || presets.length === 0) {
+                container.innerHTML = '<div class="col-12 text-center text-muted py-4">No presets available</div>';
+                return;
+            }
+
+            container.innerHTML = presets.map(preset => `
+                <div class="col-md-6 col-lg-3">
+                    <div class="preset-card card h-100 ${selectedPresetId === preset.id ? 'selected' : ''}"
+                         onclick="selectPreset(${preset.id}, ${JSON.stringify(preset.config).replace(/"/g, '&quot;')})">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <h6 class="card-title mb-0">${preset.name}</h6>
+                                <span class="preset-badge ${preset.isDefault ? 'default' : 'custom'}">
+                                    ${preset.isDefault ? 'Default' : 'Custom'}
+                                </span>
+                            </div>
+                            <p class="card-text small text-muted mb-2">${preset.description || 'No description'}</p>
+                            <div class="small">
+                                <span class="badge bg-light text-dark me-1">${preset.config.experimentType || 'persona'}</span>
+                                <span class="badge bg-light text-dark">${preset.config.model || 'N/A'}</span>
+                            </div>
+                            ${!preset.isDefault ? `
+                                <button class="btn btn-sm btn-outline-danger mt-2" onclick="event.stopPropagation(); deletePreset(${preset.id}, '${preset.name}')">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            ` : ''}
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function selectPreset(presetId, config) {
+            selectedPresetId = presetId;
+
+            // Update UI selection
+            document.querySelectorAll('.preset-card').forEach(card => card.classList.remove('selected'));
+            event.currentTarget.classList.add('selected');
+
+            // Apply config to form
+            if (config.experimentType) document.getElementById('experimentType').value = config.experimentType;
+            if (config.provider) {
+                document.getElementById('provider').value = config.provider;
+                updateModels();
+            }
+            if (config.model) document.getElementById('model').value = config.model;
+            if (config.persona) document.getElementById('persona').value = config.persona;
+            if (config.temperature !== undefined) {
+                document.getElementById('temperature').value = config.temperature;
+                updateTempDisplay();
+            }
+            if (config.maxEntries) document.getElementById('maxEntries').value = config.maxEntries;
+            if (config.entryOrder) document.getElementById('entryOrder').value = config.entryOrder;
+            if (config.needleFact) document.getElementById('needleFact').value = config.needleFact;
+
+            // Show/hide needle fact
+            document.getElementById('needleFactContainer').style.display =
+                config.experimentType === 'position' ? 'block' : 'none';
+        }
+
+        async function loadAthletes() {
+            try {
+                const response = await fetch(`${API_BASE}/api/coach/athletes`, {
+                    headers: { 'Authorization': 'Bearer ' + authToken }
+                });
+
+                if (response.ok) {
+                    const athletes = await response.json();
+                    const select = document.getElementById('athleteId');
+                    select.innerHTML = '<option value="">Select an athlete...</option>' +
+                        athletes.map(a => `<option value="${a.athleteId}">${a.name} (${a.email})</option>`).join('');
+                }
+            } catch (e) {
+                console.error('Failed to load athletes:', e);
+            }
+        }
+
+        function updateModels() {
+            const provider = document.getElementById('provider').value;
+            const modelSelect = document.getElementById('model');
+            const models = modelsByProvider[provider] || [];
+
+            modelSelect.innerHTML = models.map(m =>
+                `<option value="${m.value}">${m.label}</option>`
+            ).join('');
+        }
+
+        function updateTempDisplay() {
+            document.getElementById('tempDisplay').textContent =
+                document.getElementById('temperature').value;
+        }
+
+        function getConfigFromForm() {
+            return {
+                athleteId: parseInt(document.getElementById('athleteId').value) || 0,
+                experimentType: document.getElementById('experimentType').value,
+                provider: document.getElementById('provider').value,
+                model: document.getElementById('model').value,
+                persona: document.getElementById('persona').value,
+                temperature: parseFloat(document.getElementById('temperature').value),
+                maxEntries: document.getElementById('maxEntries').value ?
+                    parseInt(document.getElementById('maxEntries').value) : null,
+                entryOrder: document.getElementById('entryOrder').value,
+                needleFact: document.getElementById('needleFact').value || null
+            };
+        }
+
+        async function runExperiment() {
+            const config = getConfigFromForm();
+
+            if (!config.athleteId) {
+                alert('Please select an athlete');
+                return;
+            }
+
+            // Show progress section
+            const progressSection = document.getElementById('progressSection');
+            const progressStream = document.getElementById('progressStream');
+            progressSection.classList.remove('d-none');
+            progressStream.innerHTML = '<div class="progress-line progress-info">Starting experiment...</div>';
+            document.getElementById('runStatus').textContent = 'Running';
+            document.getElementById('runStatus').className = 'badge bg-warning';
+
+            try {
+                // Start the experiment
+                const response = await fetch(`${API_BASE}/api/experiments/run`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + authToken
+                    },
+                    body: JSON.stringify(config)
+                });
+
+                const data = await response.json();
+
+                if (response.ok || response.status === 202) {
+                    const runId = data.runId;
+                    document.getElementById('runId').textContent = 'Run ID: ' + runId;
+
+                    addProgress('Experiment started with Run ID: ' + runId, 'success');
+
+                    // Connect to SSE stream
+                    streamProgress(runId);
+                } else {
+                    addProgress('Error: ' + (data.error || 'Failed to start experiment'), 'error');
+                    document.getElementById('runStatus').textContent = 'Failed';
+                    document.getElementById('runStatus').className = 'badge bg-danger';
+                }
+            } catch (e) {
+                addProgress('Connection error: ' + e.message, 'error');
+                document.getElementById('runStatus').textContent = 'Error';
+                document.getElementById('runStatus').className = 'badge bg-danger';
+            }
+        }
+
+        function streamProgress(runId) {
+            const eventSource = new EventSource(`${API_BASE}/api/experiments/runs/${runId}/stream`);
+
+            eventSource.onmessage = function(event) {
+                const data = JSON.parse(event.data);
+                addProgress(data.message || 'Progress update', 'info');
+            };
+
+            eventSource.addEventListener('progress', function(event) {
+                const data = JSON.parse(event.data);
+                addProgress(data.message, 'info');
+            });
+
+            eventSource.addEventListener('claim', function(event) {
+                const data = JSON.parse(event.data);
+                addProgress('Claim: ' + data.message, 'success');
+            });
+
+            eventSource.addEventListener('position', function(event) {
+                const data = JSON.parse(event.data);
+                addProgress('Position test: ' + data.message, 'info');
+            });
+
+            eventSource.addEventListener('complete', function(event) {
+                const data = JSON.parse(event.data);
+                addProgress('Experiment completed!', 'success');
+                document.getElementById('runStatus').textContent = 'Completed';
+                document.getElementById('runStatus').className = 'badge bg-success';
+                eventSource.close();
+            });
+
+            eventSource.addEventListener('error', function(event) {
+                if (event.data) {
+                    const data = JSON.parse(event.data);
+                    addProgress('Error: ' + data.message, 'error');
+                }
+                document.getElementById('runStatus').textContent = 'Failed';
+                document.getElementById('runStatus').className = 'badge bg-danger';
+                eventSource.close();
+            });
+
+            eventSource.onerror = function() {
+                // Check if connection closed normally
+                if (eventSource.readyState === EventSource.CLOSED) {
+                    addProgress('Stream closed', 'info');
+                }
+            };
+        }
+
+        function addProgress(message, type = 'info') {
+            const stream = document.getElementById('progressStream');
+            const timestamp = new Date().toLocaleTimeString();
+            stream.innerHTML += `<div class="progress-line progress-${type}">[${timestamp}] ${message}</div>`;
+            stream.scrollTop = stream.scrollHeight;
+        }
+
+        async function savePreset() {
+            const name = document.getElementById('presetName').value.trim();
+            const description = document.getElementById('presetDescription').value.trim();
+
+            if (!name) {
+                alert('Please enter a preset name');
+                return;
+            }
+
+            const config = getConfigFromForm();
+            delete config.athleteId; // Don't save athlete in preset
+
+            try {
+                const response = await fetch(`${API_BASE}/api/experiments/presets`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + authToken
+                    },
+                    body: JSON.stringify({ name, description, config })
+                });
+
+                if (response.ok || response.status === 201) {
+                    // Close modal and refresh presets
+                    bootstrap.Modal.getInstance(document.getElementById('savePresetModal')).hide();
+                    document.getElementById('presetName').value = '';
+                    document.getElementById('presetDescription').value = '';
+                    await loadPresets();
+                    alert('Preset saved successfully!');
+                } else {
+                    const data = await response.json();
+                    alert('Error: ' + (data.error || 'Failed to save preset'));
+                }
+            } catch (e) {
+                alert('Connection error: ' + e.message);
+            }
+        }
+
+        async function deletePreset(presetId, presetName) {
+            if (!confirm(`Delete preset "${presetName}"?`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/api/experiments/presets/${presetId}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': 'Bearer ' + authToken }
+                });
+
+                if (response.ok || response.status === 204) {
+                    await loadPresets();
+                } else {
+                    const data = await response.json();
+                    alert('Error: ' + (data.error || 'Failed to delete preset'));
+                }
+            } catch (e) {
+                alert('Connection error: ' + e.message);
+            }
+        }
+    </script>
+</body>
+</html>
