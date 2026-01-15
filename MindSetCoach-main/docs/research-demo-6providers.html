@@ -1,0 +1,1085 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Context Engineering Lab | MindSetCoach</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: #f8fafc;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        .experiment-card {
+            border-radius: 16px;
+            border: none;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            overflow: hidden;
+        }
+        .persona-goggins {
+            background: linear-gradient(135deg, #0f0f0f 0%, #1a1a2e 50%, #16213e 100%);
+            color: #ffffff;
+        }
+        .persona-goggins .quote {
+            color: #ff6b6b;
+            font-style: italic;
+        }
+        .persona-lasso {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            color: #78350f;
+        }
+        .persona-lasso .quote {
+            color: #92400e;
+            font-style: italic;
+        }
+        .position-bar {
+            height: 80px;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+        }
+        .position-found { 
+            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%); 
+            color: white;
+            box-shadow: 0 4px 15px rgba(34, 197, 94, 0.4);
+        }
+        .position-missed { 
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); 
+            color: white;
+            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
+        }
+        .context-zone {
+            padding: 20px;
+            border-radius: 16px;
+            margin: 10px 0;
+            text-align: center;
+        }
+        .zone-bright { 
+            background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%); 
+            border: 3px solid #22c55e;
+        }
+        .zone-dim { 
+            background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+            border: 3px dashed #ef4444;
+            position: relative;
+        }
+        .zone-dim::after {
+            content: '⚠️ LOW ATTENTION';
+            position: absolute;
+            bottom: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #ef4444;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 700;
+        }
+        .lab-header {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #a855f7 100%);
+            color: white;
+            padding: 2.5rem;
+            border-radius: 20px;
+            margin-bottom: 2rem;
+            box-shadow: 0 10px 40px rgba(79, 70, 229, 0.3);
+        }
+        .summary-text {
+            font-size: 0.95rem;
+            line-height: 1.8;
+            white-space: pre-wrap;
+        }
+        .highlight-fact {
+            background: linear-gradient(90deg, #fef08a, #fde047);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+        .token-bar {
+            height: 40px;
+            background: #e5e7eb;
+            border-radius: 20px;
+            overflow: hidden;
+            position: relative;
+        }
+        .token-fill {
+            height: 100%;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 15px;
+            font-weight: 700;
+            color: white;
+            font-size: 0.85rem;
+        }
+        .token-full { background: linear-gradient(90deg, #22c55e, #16a34a); }
+        .token-medium { background: linear-gradient(90deg, #eab308, #ca8a04); }
+        .token-low { background: linear-gradient(90deg, #ef4444, #dc2626); }
+        .insight-callout {
+            background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+            border-left: 5px solid #3b82f6;
+            padding: 1.5rem;
+            border-radius: 0 12px 12px 0;
+            margin: 1rem 0;
+        }
+        .badge-experiment {
+            background: rgba(255,255,255,0.2);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+        .vs-badge {
+            background: #ef4444;
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            font-size: 1.2rem;
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 10;
+            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
+        }
+        
+        /* Lab-grade metadata badges */
+        .run-meta .badge {
+            padding: 0.55rem 0.8rem;
+            font-weight: 600;
+            letter-spacing: 0.1px;
+            font-size: 0.75rem;
+        }
+        .run-meta .text-bg-light {
+            background: rgba(255,255,255,0.75) !important;
+            backdrop-filter: blur(6px);
+        }
+        .run-meta-dark .badge {
+            padding: 0.45rem 0.7rem;
+            font-size: 0.7rem;
+        }
+        .run-meta-dark .text-bg-light {
+            background: rgba(255,255,255,0.15) !important;
+            color: rgba(255,255,255,0.9) !important;
+            border-color: rgba(255,255,255,0.3) !important;
+        }
+        .experiment-section-header {
+            background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+            padding: 1.5rem;
+            border-radius: 16px;
+            margin-bottom: 1.5rem;
+        }
+        
+        /* Offcanvas polish */
+        .offcanvas { width: min(520px, 92vw); }
+        .claim-item { cursor: pointer; }
+        .claim-item.active { outline: 2px solid rgba(99, 102, 241, 0.5); }
+
+        /* Evidence cards */
+        .receipt-card {
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 12px 14px;
+            margin-bottom: 10px;
+            background: #fff;
+        }
+        .receipt-meta {
+            font-size: 0.8rem;
+            color: #6b7280;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 6px;
+        }
+
+        /* "VIBE, NOT FACT" stamp */
+        .stamp {
+            display: inline-block;
+            padding: 10px 14px;
+            border: 3px solid #ef4444;
+            color: #ef4444;
+            border-radius: 10px;
+            font-weight: 900;
+            letter-spacing: 1px;
+            transform: rotate(-6deg);
+            background: rgba(239, 68, 68, 0.05);
+            text-transform: uppercase;
+        }
+        .stamp-sub {
+            margin-top: 8px;
+            color: #6b7280;
+            font-size: 0.9rem;
+        }
+
+        /* Tiny highlight for receipts */
+        mark {
+            background: linear-gradient(90deg, #fef08a, #fde047);
+            padding: 0 4px;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container py-4">
+        
+        <!-- Header -->
+        <div class="lab-header">
+            <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
+                <div>
+                    <h1 class="mb-2 fw-bold">🧪 Context Engineering Lab</h1>
+                    <p class="mb-3 opacity-75">Stress-testing AI coaching personas | MindSetCoach Research</p>
+                    <!-- Global Demo/Research Badges -->
+                    <div class="d-flex flex-wrap gap-2">
+                        <span class="badge rounded-pill text-bg-secondary">🧪 DEMO DATA</span>
+                        <span class="badge rounded-pill text-bg-light border text-dark">⚠️ Research UI · Not medical advice</span>
+                    </div>
+                </div>
+                <div class="text-end">
+                    <span class="badge-experiment">Ben Marino • Dec 2025</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Architecture Diagram -->
+        <div class="mb-5">
+            <div class="experiment-section-header">
+                <h2 class="mb-2">
+                    <span class="me-2">🏗️</span>System Architecture
+                </h2>
+                <p class="text-muted mb-0">How context flows from UI to LLM — every run is reproducible.</p>
+            </div>
+            
+            <div class="card experiment-card p-3">
+                <svg viewBox="0 0 1100 280" width="100%" height="280" role="img" aria-label="MindSetCoach Context Engineering Lab architecture diagram"
+                     xmlns="http://www.w3.org/2000/svg">
+
+                  <defs>
+                    <style>
+                      .arch-box { fill: #ffffff; stroke: #c7d2fe; stroke-width: 2; rx: 18; }
+                      .arch-title { font: 700 16px -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif; fill: #111827; }
+                      .arch-sub   { font: 500 13px -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif; fill: #4b5563; }
+                      .arch-pill  { font: 700 11px -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif; fill: #4338ca; }
+                      .arch-arrow { stroke: #6366f1; stroke-width: 3; fill: none; marker-end: url(#arch-m); }
+                      .arch-note  { font: 600 12px -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif; fill: #6b7280; }
+                      .arch-bg    { fill: #eef2ff; }
+                      .provider-tag { font: 600 9px -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif; }
+                    </style>
+
+                    <marker id="arch-m" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                      <path d="M 0 0 L 10 5 L 0 10 z" fill="#6366f1"/>
+                    </marker>
+
+                    <filter id="arch-shadow" x="-20%" y="-20%" width="140%" height="140%">
+                      <feDropShadow dx="0" dy="6" stdDeviation="8" flood-color="#1f2937" flood-opacity="0.12"/>
+                    </filter>
+                  </defs>
+
+                  <!-- Background panel -->
+                  <rect x="20" y="20" width="1060" height="240" class="arch-bg" rx="22"/>
+
+                  <!-- Box 1: UI -->
+                  <g filter="url(#arch-shadow)">
+                    <rect x="60" y="70" width="190" height="120" class="arch-box"/>
+                  </g>
+                  <text x="155" y="105" text-anchor="middle" class="arch-title">UI</text>
+                  <text x="155" y="130" text-anchor="middle" class="arch-sub">Razor Pages + Bootstrap</text>
+                  <text x="155" y="155" text-anchor="middle" class="arch-sub">Experiment controls</text>
+                  <text x="155" y="180" text-anchor="middle" class="arch-pill">/Research/Dashboard</text>
+
+                  <!-- Box 2: API -->
+                  <g filter="url(#arch-shadow)">
+                    <rect x="295" y="70" width="210" height="120" class="arch-box"/>
+                  </g>
+                  <text x="400" y="105" text-anchor="middle" class="arch-title">ASP.NET Core 8 API</text>
+                  <text x="400" y="130" text-anchor="middle" class="arch-sub">JWT • OpenAPI/Swagger</text>
+                  <text x="400" y="155" text-anchor="middle" class="arch-sub">/api/ai/experiments/*</text>
+                  <text x="400" y="180" text-anchor="middle" class="arch-pill">Experiment endpoints</text>
+
+                  <!-- Box 3: Context Builder -->
+                  <g filter="url(#arch-shadow)">
+                    <rect x="545" y="70" width="220" height="120" class="arch-box"/>
+                  </g>
+                  <text x="655" y="105" text-anchor="middle" class="arch-title">Context Builder</text>
+                  <text x="655" y="130" text-anchor="middle" class="arch-sub">MaxEntries • Order</text>
+                  <text x="655" y="155" text-anchor="middle" class="arch-sub">Compression • Metadata</text>
+                  <text x="655" y="180" text-anchor="middle" class="arch-pill">Deterministic packaging</text>
+
+                  <!-- Box 4: Semantic Kernel -->
+                  <g filter="url(#arch-shadow)">
+                    <rect x="805" y="70" width="220" height="120" class="arch-box"/>
+                  </g>
+                  <text x="915" y="100" text-anchor="middle" class="arch-title">Semantic Kernel (.NET)</text>
+                  <text x="915" y="122" text-anchor="middle" class="arch-sub">Provider abstraction</text>
+                  <text x="915" y="144" text-anchor="middle" class="arch-sub">Prompt templates + tools</text>
+                  <!-- Provider tags row 1 -->
+                  <text x="842" y="168" text-anchor="middle" class="provider-tag" fill="#10b981">OpenAI</text>
+                  <text x="888" y="168" text-anchor="middle" class="provider-tag" fill="#d97706">Claude</text>
+                  <text x="938" y="168" text-anchor="middle" class="provider-tag" fill="#4285f4">Gemini</text>
+                  <text x="988" y="168" text-anchor="middle" class="provider-tag" fill="#0ea5e9">Azure</text>
+                  <!-- Provider tags row 2 -->
+                  <text x="865" y="184" text-anchor="middle" class="provider-tag" fill="#6366f1">DeepSeek</text>
+                  <text x="938" y="184" text-anchor="middle" class="provider-tag" fill="#8b5cf6">Ollama</text>
+
+                  <!-- Arrows -->
+                  <path d="M 250 130 L 295 130" class="arch-arrow"/>
+                  <path d="M 505 130 L 545 130" class="arch-arrow"/>
+                  <path d="M 765 130 L 805 130" class="arch-arrow"/>
+
+                  <!-- Lower lane: LLM + Logs -->
+                  <!-- LLM box -->
+                  <g filter="url(#arch-shadow)">
+                    <rect x="740" y="200" width="285" height="70" class="arch-box"/>
+                  </g>
+                  <text x="882" y="228" text-anchor="middle" class="arch-title">LLM Provider</text>
+                  <text x="882" y="250" text-anchor="middle" class="arch-sub">Chat completion call (6 providers supported)</text>
+
+                  <!-- Logs box -->
+                  <g filter="url(#arch-shadow)">
+                    <rect x="295" y="200" width="420" height="70" class="arch-box"/>
+                  </g>
+                  <text x="505" y="232" text-anchor="middle" class="arch-title">Experiment Logs (EF Core)</text>
+                  <text x="505" y="255" text-anchor="middle" class="arch-sub">prompt hash • params • tokens • cost • retrieval</text>
+
+                  <!-- Arrow down from SK to LLM -->
+                  <path d="M 915 190 L 915 200" class="arch-arrow"/>
+
+                  <!-- Arrow from API down to Logs -->
+                  <path d="M 400 190 L 400 200" class="arch-arrow"/>
+
+                  <!-- Arrow from LLM back to Logs (diagonal) -->
+                  <path d="M 740 235 L 715 235" class="arch-arrow"/>
+
+                  <!-- Footer note -->
+                  <text x="550" y="55" text-anchor="middle" class="arch-note">
+                    Every run is reproducible: model + prompt version + context config + metrics
+                  </text>
+                </svg>
+            </div>
+        </div>
+
+        <!-- Experiment 1: Persona War -->
+        <div class="mb-5">
+            <div class="experiment-section-header">
+                <h2 class="mb-2">
+                    <span class="me-2">⚔️</span>Experiment 1: The Persona War
+                </h2>
+                <p class="text-muted mb-3">Same athlete data. Same journal entries. Two radically different coaching responses.</p>
+                
+                <!-- Run Metadata Badges -->
+                <div class="run-meta d-flex flex-wrap gap-2 align-items-center">
+                    <span class="badge rounded-pill text-bg-light border">
+                        🤖 <strong>Model:</strong> gpt-4o-mini
+                    </span>
+                    <span class="badge rounded-pill text-bg-light border">
+                        🌡️ <strong>Temp:</strong> 0.3
+                    </span>
+                    <span class="badge rounded-pill text-bg-light border">
+                        🧩 <strong>Prompt:</strong> v12
+                    </span>
+                    <span class="badge rounded-pill text-bg-light border">
+                        🧠 <strong>Context:</strong> 7 entries · Chrono
+                    </span>
+                    <span class="badge rounded-pill text-bg-dark">
+                        🔢 <strong>Tokens:</strong> 1,847
+                    </span>
+                    <span class="badge rounded-pill text-bg-success">
+                        💸 <strong>Est. $:</strong> $0.00039
+                    </span>
+                    <span class="badge rounded-pill text-bg-info text-dark border">
+                        🎲 <strong>Runs:</strong> 3 · <strong>Var:</strong> Low
+                    </span>
+                </div>
+            </div>
+            
+            <div class="row g-4 position-relative">
+                <div class="vs-badge d-none d-md-flex">VS</div>
+                
+                <div class="col-md-6">
+                    <div class="card experiment-card persona-goggins h-100">
+                        <div class="card-body p-4">
+                            <div class="d-flex align-items-center mb-2">
+                                <span style="font-size: 2rem" class="me-2">🔥</span>
+                                <div>
+                                    <h4 class="mb-0 fw-bold">Goggins Mode</h4>
+                                    <small class="opacity-75">No excuses. Stay hard.</small>
+                                </div>
+                            </div>
+                            
+                            <!-- Goggins-specific metadata -->
+                            <div class="run-meta-dark d-flex flex-wrap gap-1 mb-3">
+                                <span class="badge rounded-pill text-bg-light border">🔢 1,847 tokens</span>
+                                <span class="badge rounded-pill text-bg-light border">💸 $0.00039</span>
+                                <span class="badge rounded-pill text-bg-light border">⏱️ 1.2s</span>
+                                <button
+                                  class="btn btn-sm btn-outline-light ms-auto"
+                                  data-bs-toggle="offcanvas"
+                                  data-bs-target="#receiptsDrawer"
+                                  data-persona="goggins"
+                                  data-runid="demo-run-001"
+                                >
+                                  🧾 Show receipts
+                                </button>
+                            </div>
+                            
+                            <div class="summary-text">
+<span class="quote">"Listen up."</span>
+
+I see you complaining about <span class="highlight-fact">shin splints</span> on Tuesday. You know what I see? An excuse waiting to happen.
+
+Three entries this week talking about "tired legs" and "not feeling it." You think every champion felt like training? Hell no.
+
+<strong>What I noticed:</strong>
+• You skipped Thursday's session — that's weakness creeping in
+• Your mental barriers are EXCUSES, not obstacles
+• You've got more in the tank. You're just scared to find it.
+
+<strong>This week's assignment:</strong>
+Stop negotiating with yourself. When the alarm goes off at 3:30 AM, you don't think. You move. The shin splints? Ice them, tape them, and get after it.
+
+<span class="quote">"Who's gonna carry the boats?"</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="card experiment-card persona-lasso h-100">
+                        <div class="card-body p-4">
+                            <div class="d-flex align-items-center mb-2">
+                                <span style="font-size: 2rem" class="me-2">🧡</span>
+                                <div>
+                                    <h4 class="mb-0 fw-bold">Ted Lasso Mode</h4>
+                                    <small class="opacity-75">Believe. Be a goldfish.</small>
+                                </div>
+                            </div>
+                            
+                            <!-- Lasso-specific metadata -->
+                            <div class="run-meta d-flex flex-wrap gap-1 mb-3">
+                                <span class="badge rounded-pill text-bg-light border">🔢 1,923 tokens</span>
+                                <span class="badge rounded-pill text-bg-light border">💸 $0.00041</span>
+                                <span class="badge rounded-pill text-bg-light border">⏱️ 1.4s</span>
+                                <button
+                                  class="btn btn-sm btn-outline-dark ms-auto"
+                                  data-bs-toggle="offcanvas"
+                                  data-bs-target="#receiptsDrawer"
+                                  data-persona="lasso"
+                                  data-runid="demo-run-001"
+                                >
+                                  🧾 Show receipts
+                                </button>
+                            </div>
+                            
+                            <div class="summary-text">
+<span class="quote">"Hey there, champ."</span>
+
+First off, I want you to know — you showed up this week. That matters. Even on Tuesday when those <span class="highlight-fact">shin splints</span> were giving you trouble, you still logged how you were feeling. That's self-awareness, friend.
+
+<strong>What I'm proud of:</strong>
+• You recognized when your body needed rest
+• You're being honest about your mental barriers
+• You came back strong on Saturday
+
+<strong>A little wisdom:</strong>
+You know what a goldfish's memory is? Ten seconds. Tuesday's tough session? Already forgotten. What matters is what you do next.
+
+Those "tired legs" are telling you something. Listen to them, then gently ask them for a little bit more.
+
+<span class="quote">"I believe in you. Now go believe in yourself."</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="insight-callout mt-4">
+                <strong>🔬 Research Insight:</strong> Same 7 journal entries. Same "shin splints" fact. 
+                But Goggins frames it as an excuse to overcome, while Lasso frames it as body wisdom to honor.
+                <em>Neither is wrong — but the coaching impact is dramatically different.</em>
+            </div>
+        </div>
+
+        <!-- Experiment 2: The Dumb Zone -->
+        <div class="mb-5">
+            <div class="experiment-section-header">
+                <h2 class="mb-2">
+                    <span class="me-2">🎯</span>Experiment 2: The "Dumb Zone"
+                </h2>
+                <p class="text-muted mb-3">
+                    Testing the "Lost in the Middle" phenomenon — where does AI attention drop?
+                </p>
+                
+                <!-- Run Metadata Badges -->
+                <div class="run-meta d-flex flex-wrap gap-2 align-items-center">
+                    <span class="badge rounded-pill text-bg-light border">
+                        🤖 <strong>Model:</strong> gpt-4o-mini
+                    </span>
+                    <span class="badge rounded-pill text-bg-light border">
+                        🌡️ <strong>Temp:</strong> 0.3
+                    </span>
+                    <span class="badge rounded-pill text-bg-light border">
+                        🧩 <strong>Prompt:</strong> v12
+                    </span>
+                    <span class="badge rounded-pill text-bg-light border">
+                        🧠 <strong>Context:</strong> 7 entries · Chrono
+                    </span>
+                    <span class="badge rounded-pill text-bg-dark">
+                        🔢 <strong>Tokens:</strong> ~5,500 (3 runs)
+                    </span>
+                    <span class="badge rounded-pill text-bg-success">
+                        💸 <strong>Est. $:</strong> $0.00117
+                    </span>
+                    <span class="badge rounded-pill text-bg-warning text-dark border">
+                        🧾 <strong>Unsupported:</strong> 1 (middle)
+                    </span>
+                    <span class="badge rounded-pill text-bg-info text-dark border">
+                        🎲 <strong>Runs:</strong> 3 · <strong>Var:</strong> None
+                    </span>
+                </div>
+            </div>
+            
+            <!-- Needle Visualization -->
+            <div class="alert alert-warning border-0 mb-4" style="background: linear-gradient(90deg, #fef3c7, #fde68a); border-left: 5px solid #f59e0b !important;">
+                <div class="d-flex align-items-center">
+                    <span style="font-size: 1.5rem" class="me-3">🎯</span>
+                    <div>
+                        <strong class="d-block">Target Fact:</strong>
+                        <code style="background: #78350f; color: #fef3c7; padding: 4px 12px; border-radius: 6px; font-size: 1rem;">"Shin splints on Tuesday"</code>
+                        <span class="text-muted ms-2">injected at each position...</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- U-Curve Visualization -->
+            <div class="row g-3 mb-4 align-items-end">
+                <div class="col-md-4">
+                    <div class="context-zone zone-bright" style="min-height: 180px;">
+                        <small class="text-success fw-bold d-block mb-2">📍 POSITION: START</small>
+                        <small class="text-muted d-block mb-2">Entry #1 of 7</small>
+                        <div class="position-bar position-found">
+                            ✅ FOUND
+                            <small class="fw-normal opacity-75">100% retrieval</small>
+                        </div>
+                        <div class="mt-2 small text-success fw-bold">HIGH ATTENTION</div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="context-zone zone-dim" style="min-height: 140px; margin-top: 40px; border-width: 4px !important; border-color: #dc2626 !important;">
+                        <small class="text-danger fw-bold d-block mb-2">📍 POSITION: MIDDLE</small>
+                        <small class="text-muted d-block mb-2">Entry #4 of 7</small>
+                        <div class="position-bar position-missed">
+                            ❌ MISSED
+                            <strong class="d-block text-white" style="font-size: 1.2rem;">0% retrieval</strong>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="context-zone zone-bright" style="min-height: 180px;">
+                        <small class="text-success fw-bold d-block mb-2">📍 POSITION: END</small>
+                        <small class="text-muted d-block mb-2">Entry #7 of 7</small>
+                        <div class="position-bar position-found">
+                            ✅ FOUND
+                            <small class="fw-normal opacity-75">100% retrieval</small>
+                        </div>
+                        <div class="mt-2 small text-success fw-bold">HIGH ATTENTION</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- U-Curve Label -->
+            <div class="text-center mb-4">
+                <svg width="200" height="60" viewBox="0 0 200 60" class="mx-auto d-block">
+                    <path d="M 10 10 Q 100 50 190 10" stroke="#6366f1" stroke-width="3" fill="none" stroke-dasharray="5,5"/>
+                    <text x="100" y="55" text-anchor="middle" fill="#6366f1" font-size="12" font-weight="bold">← U-Curve of Attention →</text>
+                </svg>
+            </div>
+            
+            <div class="insight-callout">
+                <strong>🔬 Research Insight:</strong> The AI completely missed the shin splints fact when it was buried in entry #4 of 7.
+                This is the <strong>"U-Curve of Attention"</strong> — LLMs focus heavily on the start and end of context, 
+                but the middle becomes a blind spot. <em>Your most important data might be invisible.</em>
+            </div>
+        </div>
+
+        <!-- Experiment 3: Compression -->
+        <div class="mb-5">
+            <div class="experiment-section-header">
+                <h2 class="mb-2">
+                    <span class="me-2">📦</span>Experiment 3: Context Compression Trade-offs
+                </h2>
+                <p class="text-muted mb-3">
+                    Can we save tokens (and money) by compressing context? What do we lose?
+                </p>
+                
+                <!-- Run Metadata Badges -->
+                <div class="run-meta d-flex flex-wrap gap-2 align-items-center">
+                    <span class="badge rounded-pill text-bg-light border">
+                        🤖 <strong>Model:</strong> gpt-4o-mini
+                    </span>
+                    <span class="badge rounded-pill text-bg-light border">
+                        🌡️ <strong>Temp:</strong> 0.3
+                    </span>
+                    <span class="badge rounded-pill text-bg-light border">
+                        🧩 <strong>Prompt:</strong> v12
+                    </span>
+                    <span class="badge rounded-pill text-bg-light border">
+                        🧠 <strong>Context:</strong> Variable
+                    </span>
+                    <span class="badge rounded-pill text-bg-dark">
+                        🔢 <strong>Tokens:</strong> 3,978 total
+                    </span>
+                    <span class="badge rounded-pill text-bg-success">
+                        💸 <strong>Est. $:</strong> $0.00085
+                    </span>
+                    <span class="badge rounded-pill text-bg-warning text-dark border">
+                        🧾 <strong>Unsupported:</strong> 2 (limited)
+                    </span>
+                    <span class="badge rounded-pill text-bg-info text-dark border">
+                        🎲 <strong>Runs:</strong> 3 · <strong>Var:</strong> Med
+                    </span>
+                </div>
+            </div>
+            
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="card experiment-card">
+                        <div class="card-header bg-success text-white fw-bold">
+                            Full Context
+                            <span class="badge bg-light text-success float-end">BASELINE</span>
+                        </div>
+                        <div class="card-body">
+                            <div class="token-bar mb-2">
+                                <div class="token-fill token-full" style="width: 100%">2,340 tokens</div>
+                            </div>
+                            <small class="text-muted">All 7 entries, full text</small>
+                            <div class="run-meta d-flex flex-wrap gap-1 mt-2 mb-3">
+                                <span class="badge rounded-pill text-bg-light border small">💸 $0.00050</span>
+                            </div>
+                            <hr>
+                            <div class="small">
+                                <strong class="text-success">✓ Caught shin splints</strong><br>
+                                <strong class="text-success">✓ Noticed Thursday skip</strong><br>
+                                <strong class="text-success">✓ Identified recovery pattern</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card experiment-card">
+                        <div class="card-header bg-warning fw-bold">
+                            Compressed
+                            <span class="badge bg-dark float-end">-55% TOKENS</span>
+                        </div>
+                        <div class="card-body">
+                            <div class="token-bar mb-2">
+                                <div class="token-fill token-medium" style="width: 45%">1,053 tokens</div>
+                            </div>
+                            <small class="text-muted">Summarized entries</small>
+                            <div class="run-meta d-flex flex-wrap gap-1 mt-2 mb-3">
+                                <span class="badge rounded-pill text-bg-light border small">💸 $0.00022</span>
+                            </div>
+                            <hr>
+                            <div class="small">
+                                <strong class="text-success">✓ Caught shin splints</strong><br>
+                                <strong class="text-danger">✗ Missed Thursday skip</strong><br>
+                                <strong class="text-success">✓ Identified recovery pattern</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card experiment-card">
+                        <div class="card-header bg-danger text-white fw-bold">
+                            Limited (3 entries)
+                            <span class="badge bg-dark float-end">-75% TOKENS</span>
+                        </div>
+                        <div class="card-body">
+                            <div class="token-bar mb-2">
+                                <div class="token-fill token-low" style="width: 25%">585 tokens</div>
+                            </div>
+                            <small class="text-muted">Most recent only</small>
+                            <div class="run-meta d-flex flex-wrap gap-1 mt-2 mb-3">
+                                <span class="badge rounded-pill text-bg-light border small">💸 $0.00013</span>
+                            </div>
+                            <hr>
+                            <div class="small">
+                                <strong class="text-danger">✗ Missed shin splints (too old)</strong><br>
+                                <strong class="text-danger">✗ Missed Thursday skip</strong><br>
+                                <strong class="text-success">✓ Identified recovery pattern</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="insight-callout mt-4">
+                <strong>🔬 Research Insight:</strong> Compression saved 55% in tokens but lost critical context.
+                The "shin splints" fact — which both personas correctly identified in full context — 
+                was completely lost when we limited to recent entries only.
+                <em>Cheaper isn't always better.</em>
+            </div>
+        </div>
+
+        <!-- FinOps Dashboard -->
+        <div class="mb-5">
+            <div class="experiment-section-header">
+                <h2 class="mb-2">
+                    <span class="me-2">💰</span>FinOps Dashboard
+                    <span class="badge bg-success ms-2">Cost Tracking</span>
+                </h2>
+                <p class="text-muted mb-3">
+                    Real-time cost observability for AI operations — the metrics engineering managers actually want to see.
+                </p>
+                
+                <!-- Session Metadata Badges -->
+                <div class="run-meta d-flex flex-wrap gap-2 align-items-center">
+                    <span class="badge rounded-pill text-bg-light border">
+                        🤖 <strong>Model:</strong> gpt-4o-mini
+                    </span>
+                    <span class="badge rounded-pill text-bg-light border">
+                        📅 <strong>Session:</strong> Dec 13, 2025
+                    </span>
+                    <span class="badge rounded-pill text-bg-light border">
+                        ⏱️ <strong>Duration:</strong> 12m 34s
+                    </span>
+                    <span class="badge rounded-pill text-bg-dark">
+                        🔢 <strong>Total Calls:</strong> 12
+                    </span>
+                    <span class="badge rounded-pill text-bg-success">
+                        💸 <strong>Session Total:</strong> $0.0047
+                    </span>
+                    <span class="badge rounded-pill text-bg-secondary">
+                        🧪 DEMO DATA
+                    </span>
+                </div>
+            </div>
+            
+            <div class="row g-4 mb-4">
+                <div class="col-md-3">
+                    <div class="card experiment-card text-center p-4">
+                        <h3 class="text-success mb-1">$0.0047</h3>
+                        <small class="text-muted">Session Cost</small>
+                        <div class="mt-2 small text-muted">12 API calls</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card experiment-card text-center p-4">
+                        <h3 class="text-primary mb-1">$0.00039</h3>
+                        <small class="text-muted">Avg Cost/Call</small>
+                        <div class="mt-2 small text-muted">gpt-4o-mini</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card experiment-card text-center p-4">
+                        <h3 class="text-warning mb-1">$1.17</h3>
+                        <small class="text-muted">Projected Monthly</small>
+                        <div class="mt-2 small text-muted">@ 100 calls/day</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card experiment-card text-center p-4">
+                        <h3 class="text-info mb-1">18,420</h3>
+                        <small class="text-muted">Total Tokens</small>
+                        <div class="mt-2 small text-muted">prompt + completion</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <div class="card experiment-card">
+                        <div class="card-header bg-light fw-bold">Cost by Persona</div>
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                                <span>🔥 Goggins Mode</span>
+                                <span>
+                                    <span class="badge bg-dark">$0.0024</span>
+                                    <small class="text-muted ms-2">6 calls</small>
+                                </span>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                                <span>🧡 Lasso Mode</span>
+                                <span>
+                                    <span class="badge bg-warning text-dark">$0.0023</span>
+                                    <small class="text-muted ms-2">6 calls</small>
+                                </span>
+                            </div>
+                            <div class="mt-3 small text-muted">
+                                <strong>Insight:</strong> Lasso produces slightly shorter responses, costing 4% less per call.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card experiment-card">
+                        <div class="card-header bg-light fw-bold">Cost Optimization Tips</div>
+                        <div class="card-body">
+                            <ul class="list-unstyled mb-0">
+                                <li class="mb-2">💡 Enable compression to save ~45% on tokens</li>
+                                <li class="mb-2">💡 Use MaxEntries=7 to cap context size</li>
+                                <li class="mb-2">✅ No wasted spend on failed calls</li>
+                                <li class="mb-2">💡 Consider gpt-3.5-turbo for 70% cost reduction (test quality first)</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="insight-callout mt-4">
+                <strong>🔬 Research Insight:</strong> At $0.00039 per coaching insight, this AI system costs less than 
+                <strong>$0.50/month</strong> for a typical athlete logging daily. That's 100x cheaper than the value of one 
+                prevented injury from caught overtraining signals. <em>FinOps isn't just about cutting costs — it's about proving ROI.</em>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="text-center text-muted py-4">
+            <div class="mb-3">
+                <span class="badge rounded-pill text-bg-secondary me-2">🧪 DEMO DATA</span>
+                <span class="badge rounded-pill text-bg-light border">⚠️ Research UI · Not medical advice</span>
+            </div>
+            <p class="mb-1">
+                <strong>MindSetCoach Context Engineering Lab</strong>
+            </p>
+            <small>
+                Built by Ben Marino | Research into AI coaching reliability
+            </small>
+        </div>
+        
+    </div>
+
+    <!-- Receipts Drawer (Bootstrap Offcanvas) -->
+    <div class="offcanvas offcanvas-end" tabindex="-1" id="receiptsDrawer" aria-labelledby="receiptsDrawerLabel">
+      <div class="offcanvas-header">
+        <div>
+          <h5 class="offcanvas-title fw-bold" id="receiptsDrawerLabel">🧾 Claims → Receipts</h5>
+          <div class="small text-muted" id="receiptsMeta">Loading…</div>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+      </div>
+
+      <div class="offcanvas-body">
+        <!-- Summary row -->
+        <div class="d-flex flex-wrap gap-2 mb-3" id="receiptsBadges">
+          <!-- populated via JS -->
+        </div>
+
+        <!-- Claim list -->
+        <div class="list-group" id="claimsList">
+          <!-- populated via JS -->
+        </div>
+
+        <hr class="my-4">
+
+        <!-- Evidence viewer -->
+        <div>
+          <div class="d-flex align-items-center justify-content-between">
+            <h6 class="fw-bold mb-2">Evidence</h6>
+            <span class="badge rounded-pill text-bg-light border" id="evidenceCount">0 receipts</span>
+          </div>
+
+          <div id="evidencePanel">
+            <div class="text-muted small">Select a claim to view receipts.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+      // --- Demo data (swap with your real experiment log payload later) ---
+      const demoRuns = {
+        "demo-run-001": {
+          model: "gpt-4o-mini",
+          temperature: 0.3,
+          promptVersion: "v12",
+          entries: 7,
+          order: "Chrono",
+          tokens: 1847,
+          estCost: "$0.00039",
+          personaClaims: {
+            goggins: [
+              {
+                id: "c1",
+                claim: "You reported shin splints on Tuesday.",
+                receipts: [
+                  {
+                    entryId: 3,
+                    date: "Tue",
+                    snippet: 'Felt <mark>shin splints</mark> today. Tried to push through but had to back off.',
+                    source: "JournalEntry #3"
+                  }
+                ]
+              },
+              {
+                id: "c2",
+                claim: "You skipped Thursday's session.",
+                receipts: [
+                  {
+                    entryId: 5,
+                    date: "Thu",
+                    snippet: 'Didn\'t train today. Mentally flat and told myself I "needed rest".',
+                    source: "JournalEntry #5"
+                  }
+                ]
+              },
+              {
+                id: "c3",
+                claim: "Your mental barriers are excuses, not obstacles.",
+                receipts: [] // unsupported on purpose to demonstrate the stamp
+              }
+            ],
+            lasso: [
+              {
+                id: "c1",
+                claim: "You showed up and logged how you felt, even with shin splints.",
+                receipts: [
+                  {
+                    entryId: 3,
+                    date: "Tue",
+                    snippet: 'Felt <mark>shin splints</mark> today. Logged it anyway because I\'m trying to notice patterns.',
+                    source: "JournalEntry #3"
+                  }
+                ]
+              },
+              {
+                id: "c2",
+                claim: "You came back strong on Saturday.",
+                receipts: [
+                  {
+                    entryId: 7,
+                    date: "Sat",
+                    snippet: 'Good session today. Legs felt better, confidence returned by the end.',
+                    source: "JournalEntry #7"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      };
+
+      const drawerEl = document.getElementById("receiptsDrawer");
+      const receiptsMeta = document.getElementById("receiptsMeta");
+      const receiptsBadges = document.getElementById("receiptsBadges");
+      const claimsList = document.getElementById("claimsList");
+      const evidencePanel = document.getElementById("evidencePanel");
+      const evidenceCount = document.getElementById("evidenceCount");
+
+      // Helper: build a badge
+      function badge(html, cls = "text-bg-light border") {
+        return `<span class="badge rounded-pill ${cls}">${html}</span>`;
+      }
+
+      // Render evidence area for a claim
+      function renderEvidence(receipts) {
+        if (!receipts || receipts.length === 0) {
+          evidenceCount.textContent = "0 receipts";
+          evidencePanel.innerHTML = `
+            <div class="mb-2"><span class="stamp">VIBE, NOT FACT</span></div>
+            <div class="stamp-sub">No supporting journal excerpt found for this claim.</div>
+          `;
+          return;
+        }
+
+        evidenceCount.textContent = `${receipts.length} receipt${receipts.length === 1 ? "" : "s"}`;
+        evidencePanel.innerHTML = receipts.map(r => `
+          <div class="receipt-card">
+            <div class="small fw-bold">${r.source}</div>
+            <div class="mt-1">${r.snippet}</div>
+            <div class="receipt-meta">
+              <span>📅 ${r.date}</span>
+              <span>🆔 Entry ${r.entryId}</span>
+            </div>
+          </div>
+        `).join("");
+      }
+
+      // Render claim list
+      function renderClaims(claims) {
+        claimsList.innerHTML = claims.map((c, idx) => {
+          const supported = (c.receipts && c.receipts.length > 0);
+          const icon = supported ? "✅" : "⚠️";
+          const sub = supported ? `${c.receipts.length} receipt(s)` : "No receipts";
+          return `
+            <button type="button"
+                    class="list-group-item list-group-item-action claim-item"
+                    data-claimid="${c.id}"
+                    data-index="${idx}">
+              <div class="d-flex justify-content-between align-items-start">
+                <div class="me-2">
+                  <div class="fw-bold">${icon} ${c.claim}</div>
+                  <div class="small text-muted">${sub}</div>
+                </div>
+                <span class="badge rounded-pill ${supported ? "text-bg-success" : "text-bg-danger"}">
+                  ${supported ? "SUPPORTED" : "UNVERIFIED"}
+                </span>
+              </div>
+            </button>
+          `;
+        }).join("");
+
+        // Activate first claim by default
+        const first = claimsList.querySelector(".claim-item");
+        if (first) first.click();
+      }
+
+      // Handle click on a claim to show receipts
+      claimsList.addEventListener("click", (e) => {
+        const btn = e.target.closest(".claim-item");
+        if (!btn) return;
+
+        // active state
+        claimsList.querySelectorAll(".claim-item").forEach(x => x.classList.remove("active"));
+        btn.classList.add("active");
+
+        const idx = Number(btn.dataset.index);
+        const activeClaims = drawerEl._activeClaims || [];
+        renderEvidence(activeClaims[idx]?.receipts || []);
+      });
+
+      // When the drawer opens, populate based on persona+runid
+      drawerEl.addEventListener("show.bs.offcanvas", (event) => {
+        const trigger = event.relatedTarget;
+        const persona = trigger?.getAttribute("data-persona") || "goggins";
+        const runId = trigger?.getAttribute("data-runid") || "demo-run-001";
+
+        const run = demoRuns[runId];
+        const claims = run?.personaClaims?.[persona] || [];
+
+        // meta line
+        receiptsMeta.textContent = `Run: ${runId} • Persona: ${persona}`;
+
+        // badges row
+        const unsupportedCount = claims.filter(c => !c.receipts || c.receipts.length === 0).length;
+        receiptsBadges.innerHTML = [
+          badge(`🤖 <strong>${run.model}</strong>`, "text-bg-light border"),
+          badge(`🌡️ Temp <strong>${run.temperature}</strong>`, "text-bg-light border"),
+          badge(`🧩 Prompt <strong>${run.promptVersion}</strong>`, "text-bg-light border"),
+          badge(`🧠 Context <strong>${run.entries}</strong> • ${run.order}`, "text-bg-light border"),
+          badge(`🔢 Tokens <strong>${run.tokens.toLocaleString()}</strong>`, "text-bg-dark"),
+          badge(`💸 Est. <strong>${run.estCost}</strong>`, "text-bg-success"),
+          badge(`⚠️ Unsupported <strong>${unsupportedCount}</strong>`, unsupportedCount ? "text-bg-warning text-dark" : "text-bg-info text-dark")
+        ].join("");
+
+        // store claims for click handler
+        drawerEl._activeClaims = claims;
+
+        // render claim list + reset evidence panel
+        evidenceCount.textContent = "0 receipts";
+        evidencePanel.innerHTML = `<div class="text-muted small">Select a claim to view receipts.</div>`;
+        renderClaims(claims);
+      });
+    </script>
+</body>
+</html>
