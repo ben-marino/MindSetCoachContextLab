@@ -1,0 +1,2732 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Context Engineering Lab | MindSetCoach</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: #f8fafc;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        .experiment-card {
+            border-radius: 16px;
+            border: none;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            overflow: hidden;
+        }
+        .persona-goggins {
+            background: linear-gradient(135deg, #0f0f0f 0%, #1a1a2e 50%, #16213e 100%);
+            color: #ffffff;
+        }
+        .persona-goggins .quote {
+            color: #ff6b6b;
+            font-style: italic;
+        }
+        .persona-lasso {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            color: #78350f;
+        }
+        .persona-lasso .quote {
+            color: #92400e;
+            font-style: italic;
+        }
+        .position-bar {
+            height: 80px;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+        }
+        .position-found {
+            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(34, 197, 94, 0.4);
+        }
+        .position-missed {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
+        }
+        .context-zone {
+            padding: 20px;
+            border-radius: 16px;
+            margin: 10px 0;
+            text-align: center;
+        }
+        .zone-bright {
+            background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+            border: 3px solid #22c55e;
+        }
+        .zone-dim {
+            background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+            border: 3px dashed #ef4444;
+            position: relative;
+        }
+        .zone-dim::after {
+            content: '!! LOW ATTENTION';
+            position: absolute;
+            bottom: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #ef4444;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 700;
+        }
+        .lab-header {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #a855f7 100%);
+            color: white;
+            padding: 2.5rem;
+            border-radius: 20px;
+            margin-bottom: 2rem;
+            box-shadow: 0 10px 40px rgba(79, 70, 229, 0.3);
+        }
+        .summary-text {
+            font-size: 0.95rem;
+            line-height: 1.8;
+            white-space: pre-wrap;
+        }
+        .highlight-fact {
+            background: linear-gradient(90deg, #fef08a, #fde047);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+        .token-bar {
+            height: 40px;
+            background: #e5e7eb;
+            border-radius: 20px;
+            overflow: hidden;
+            position: relative;
+        }
+        .token-fill {
+            height: 100%;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 15px;
+            font-weight: 700;
+            color: white;
+            font-size: 0.85rem;
+        }
+        .token-full { background: linear-gradient(90deg, #22c55e, #16a34a); }
+        .token-medium { background: linear-gradient(90deg, #eab308, #ca8a04); }
+        .token-low { background: linear-gradient(90deg, #ef4444, #dc2626); }
+        .insight-callout {
+            background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+            border-left: 5px solid #3b82f6;
+            padding: 1.5rem;
+            border-radius: 0 12px 12px 0;
+            margin: 1rem 0;
+        }
+        .badge-experiment {
+            background: rgba(255,255,255,0.2);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+        .vs-badge {
+            background: #ef4444;
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            font-size: 1.2rem;
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 10;
+            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
+        }
+
+        /* Lab-grade metadata badges */
+        .run-meta .badge {
+            padding: 0.55rem 0.8rem;
+            font-weight: 600;
+            letter-spacing: 0.1px;
+            font-size: 0.75rem;
+        }
+        .run-meta .text-bg-light {
+            background: rgba(255,255,255,0.75) !important;
+            backdrop-filter: blur(6px);
+        }
+        .run-meta-dark .badge {
+            padding: 0.45rem 0.7rem;
+            font-size: 0.7rem;
+        }
+        .run-meta-dark .text-bg-light {
+            background: rgba(255,255,255,0.15) !important;
+            color: rgba(255,255,255,0.9) !important;
+            border-color: rgba(255,255,255,0.3) !important;
+        }
+        .experiment-section-header {
+            background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+            padding: 1.5rem;
+            border-radius: 16px;
+            margin-bottom: 1.5rem;
+        }
+
+        /* Offcanvas polish */
+        .offcanvas { width: min(520px, 92vw); }
+        .claim-item { cursor: pointer; }
+        .claim-item.active { outline: 2px solid rgba(99, 102, 241, 0.5); }
+
+        /* Evidence cards */
+        .receipt-card {
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 12px 14px;
+            margin-bottom: 10px;
+            background: #fff;
+        }
+        .receipt-meta {
+            font-size: 0.8rem;
+            color: #6b7280;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 6px;
+        }
+
+        /* "VIBE, NOT FACT" stamp */
+        .stamp {
+            display: inline-block;
+            padding: 10px 14px;
+            border: 3px solid #ef4444;
+            color: #ef4444;
+            border-radius: 10px;
+            font-weight: 900;
+            letter-spacing: 1px;
+            transform: rotate(-6deg);
+            background: rgba(239, 68, 68, 0.05);
+            text-transform: uppercase;
+        }
+        .stamp-sub {
+            margin-top: 8px;
+            color: #6b7280;
+            font-size: 0.9rem;
+        }
+
+        /* Tiny highlight for receipts */
+        mark {
+            background: linear-gradient(90deg, #fef08a, #fde047);
+            padding: 0 4px;
+            border-radius: 4px;
+        }
+
+        /* Config panel styling */
+        .config-panel {
+            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            color: white;
+        }
+        .config-panel input, .config-panel select {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: white;
+            border-radius: 8px;
+        }
+        .config-panel input::placeholder {
+            color: rgba(255,255,255,0.5);
+        }
+        .config-panel input:focus, .config-panel select:focus {
+            background: rgba(255,255,255,0.15);
+            border-color: rgba(255,255,255,0.4);
+            color: white;
+            box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.3);
+        }
+        .config-panel label {
+            color: rgba(255,255,255,0.8);
+            font-weight: 500;
+            font-size: 0.85rem;
+        }
+
+        /* Loading states */
+        .loading-spinner {
+            display: inline-block;
+            width: 1rem;
+            height: 1rem;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .skeleton {
+            background: linear-gradient(90deg, #e5e7eb 25%, #f3f4f6 50%, #e5e7eb 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+            border-radius: 8px;
+        }
+        @keyframes shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        /* Error states */
+        .error-banner {
+            background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+            border: 1px solid #ef4444;
+            border-radius: 12px;
+            padding: 1rem;
+            color: #b91c1c;
+        }
+
+        /* SSE progress */
+        .sse-log {
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 0.8rem;
+            background: #1e293b;
+            color: #22c55e;
+            padding: 1rem;
+            border-radius: 8px;
+        }
+        .sse-log .event-progress { color: #60a5fa; }
+        .sse-log .event-claim { color: #fbbf24; }
+        .sse-log .event-position { color: #a78bfa; }
+        .sse-log .event-complete { color: #22c55e; font-weight: bold; }
+        .sse-log .event-error { color: #f87171; }
+
+        /* Run selector */
+        .run-selector {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            min-width: 300px;
+        }
+        .run-selector option {
+            background: #1e293b;
+            color: white;
+        }
+
+        /* Connection status */
+        .connection-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.8rem;
+        }
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+        .status-connected { background: #22c55e; }
+        .status-disconnected { background: #ef4444; }
+        .status-connecting { background: #eab308; animation: pulse 1s infinite; }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Compare Providers Section */
+        .comparison-grid {
+            display: grid;
+            gap: 2px;
+            background: #e5e7eb;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        .comparison-grid-header {
+            display: contents;
+        }
+        .comparison-cell {
+            background: white;
+            padding: 12px 8px;
+            text-align: center;
+            min-height: 60px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            transition: all 0.2s ease;
+        }
+        .comparison-cell:hover {
+            background: #f8fafc;
+        }
+        .comparison-cell.header {
+            background: #f1f5f9;
+            font-weight: 700;
+            font-size: 0.85rem;
+            color: #374151;
+        }
+        .comparison-cell.row-header {
+            background: #f8fafc;
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: #4b5563;
+        }
+        .comparison-cell .result-icon {
+            font-size: 1.5rem;
+            margin-bottom: 4px;
+        }
+        .comparison-cell .result-pct {
+            font-size: 0.75rem;
+            color: #6b7280;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        .comparison-cell:hover .result-pct {
+            opacity: 1;
+        }
+        .comparison-cell.pending {
+            background: #fafafa;
+        }
+        .comparison-cell.pending::after {
+            content: '—';
+            color: #d1d5db;
+            font-size: 1.2rem;
+        }
+        .comparison-cell.running::after {
+            content: '';
+            width: 20px;
+            height: 20px;
+            border: 2px solid #e5e7eb;
+            border-top-color: #6366f1;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        /* Provider checkboxes */
+        .provider-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .provider-checkbox:hover {
+            background: rgba(255,255,255,0.15);
+        }
+        .provider-checkbox input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+        .provider-checkbox .provider-name {
+            font-weight: 500;
+            color: white;
+        }
+        .provider-checkbox .provider-model {
+            font-size: 0.75rem;
+            color: rgba(255,255,255,0.6);
+        }
+
+        /* Cost comparison bars */
+        .cost-bar-container {
+            margin-bottom: 12px;
+        }
+        .cost-bar-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 4px;
+            font-size: 0.85rem;
+        }
+        .cost-bar-label .provider-name {
+            font-weight: 600;
+            color: #374151;
+        }
+        .cost-bar-label .cost-value {
+            color: #6b7280;
+        }
+        .cost-bar {
+            height: 28px;
+            background: #e5e7eb;
+            border-radius: 6px;
+            overflow: hidden;
+            position: relative;
+        }
+        .cost-bar-fill {
+            height: 100%;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            padding-left: 10px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: white;
+            transition: width 0.5s ease-out;
+            min-width: fit-content;
+        }
+        .cost-bar-fill.openai { background: linear-gradient(90deg, #10b981, #059669); }
+        .cost-bar-fill.anthropic { background: linear-gradient(90deg, #f59e0b, #d97706); }
+        .cost-bar-fill.google { background: linear-gradient(90deg, #4285f4, #1a73e8); }
+        .cost-bar-fill.deepseek { background: linear-gradient(90deg, #6366f1, #4f46e5); }
+        .cost-bar-fill.ollama { background: linear-gradient(90deg, #8b5cf6, #7c3aed); }
+
+        /* Batch progress */
+        .batch-progress {
+            background: #1e293b;
+            border-radius: 8px;
+            padding: 12px;
+            margin-top: 12px;
+        }
+        .batch-progress-bar {
+            height: 8px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 8px;
+        }
+        .batch-progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #22c55e, #16a34a);
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+        .batch-progress-text {
+            font-size: 0.8rem;
+            color: rgba(255,255,255,0.8);
+        }
+
+        /* Export button */
+        .btn-export {
+            background: linear-gradient(135deg, #059669, #047857);
+            border: none;
+            color: white;
+            font-weight: 600;
+        }
+        .btn-export:hover {
+            background: linear-gradient(135deg, #047857, #065f46);
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container py-4">
+
+        <!-- Config Panel -->
+        <div class="config-panel">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="mb-0 fw-bold">API Configuration</h5>
+                <div class="connection-status" id="connectionStatus">
+                    <span class="status-dot status-disconnected"></span>
+                    <span>Not connected</span>
+                </div>
+            </div>
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label">API Base URL</label>
+                    <input type="text" class="form-control" id="apiBaseUrl" value="" placeholder="(same origin)">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">JWT Token</label>
+                    <input type="password" class="form-control" id="jwtToken" placeholder="Enter your JWT token">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Select Experiment Run</label>
+                    <select class="form-select run-selector" id="runSelector">
+                        <option value="">-- Load runs from API --</option>
+                    </select>
+                </div>
+            </div>
+            <div class="row g-3 mt-2">
+                <div class="col-md-3">
+                    <button class="btn btn-light w-100" id="testConnectionBtn">
+                        Test Connection
+                    </button>
+                </div>
+                <div class="col-md-3">
+                    <button class="btn btn-outline-light w-100" id="loadRunsBtn">
+                        Refresh Runs
+                    </button>
+                </div>
+                <div class="col-md-3">
+                    <button class="btn btn-outline-warning w-100" id="useDemoDataBtn">
+                        Use Demo Data
+                    </button>
+                </div>
+                <div class="col-md-3">
+                    <button class="btn btn-success w-100" id="runExperimentBtn" data-bs-toggle="modal" data-bs-target="#runExperimentModal">
+                        + Run New Experiment
+                    </button>
+                </div>
+            </div>
+            <div id="connectionError" class="mt-3" style="display: none;"></div>
+        </div>
+
+        <!-- Header -->
+        <div class="lab-header">
+            <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
+                <div>
+                    <h1 class="mb-2 fw-bold">Context Engineering Lab</h1>
+                    <p class="mb-3 opacity-75">Stress-testing AI coaching personas | MindSetCoach Research</p>
+                    <!-- Global Demo/Research Badges -->
+                    <div class="d-flex flex-wrap gap-2" id="headerBadges">
+                        <span class="badge rounded-pill text-bg-secondary" id="dataSourceBadge">DEMO DATA</span>
+                        <span class="badge rounded-pill text-bg-light border text-dark">Research UI - Not medical advice</span>
+                    </div>
+                </div>
+                <div class="text-end">
+                    <span class="badge-experiment">Ben Marino - Dec 2025</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Architecture Diagram -->
+        <div class="mb-5">
+            <div class="experiment-section-header">
+                <h2 class="mb-2">
+                    <span class="me-2">System Architecture</span>
+                </h2>
+                <p class="text-muted mb-0">How context flows from UI to LLM - every run is reproducible.</p>
+            </div>
+
+            <div class="card experiment-card p-3">
+                <svg viewBox="0 0 1100 280" width="100%" height="280" role="img" aria-label="MindSetCoach Context Engineering Lab architecture diagram"
+                     xmlns="http://www.w3.org/2000/svg">
+
+                  <defs>
+                    <style>
+                      .arch-box { fill: #ffffff; stroke: #c7d2fe; stroke-width: 2; rx: 18; }
+                      .arch-title { font: 700 16px -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif; fill: #111827; }
+                      .arch-sub   { font: 500 13px -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif; fill: #4b5563; }
+                      .arch-pill  { font: 700 11px -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif; fill: #4338ca; }
+                      .arch-arrow { stroke: #6366f1; stroke-width: 3; fill: none; marker-end: url(#arch-m); }
+                      .arch-note  { font: 600 12px -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif; fill: #6b7280; }
+                      .arch-bg    { fill: #eef2ff; }
+                      .provider-tag { font: 600 9px -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif; }
+                    </style>
+
+                    <marker id="arch-m" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                      <path d="M 0 0 L 10 5 L 0 10 z" fill="#6366f1"/>
+                    </marker>
+
+                    <filter id="arch-shadow" x="-20%" y="-20%" width="140%" height="140%">
+                      <feDropShadow dx="0" dy="6" stdDeviation="8" flood-color="#1f2937" flood-opacity="0.12"/>
+                    </filter>
+                  </defs>
+
+                  <!-- Background panel -->
+                  <rect x="20" y="20" width="1060" height="240" class="arch-bg" rx="22"/>
+
+                  <!-- Box 1: UI -->
+                  <g filter="url(#arch-shadow)">
+                    <rect x="60" y="70" width="190" height="120" class="arch-box"/>
+                  </g>
+                  <text x="155" y="105" text-anchor="middle" class="arch-title">UI</text>
+                  <text x="155" y="130" text-anchor="middle" class="arch-sub">Razor Pages + Bootstrap</text>
+                  <text x="155" y="155" text-anchor="middle" class="arch-sub">Experiment controls</text>
+                  <text x="155" y="180" text-anchor="middle" class="arch-pill">/Research/Dashboard</text>
+
+                  <!-- Box 2: API -->
+                  <g filter="url(#arch-shadow)">
+                    <rect x="295" y="70" width="210" height="120" class="arch-box"/>
+                  </g>
+                  <text x="400" y="105" text-anchor="middle" class="arch-title">ASP.NET Core 8 API</text>
+                  <text x="400" y="130" text-anchor="middle" class="arch-sub">JWT - OpenAPI/Swagger</text>
+                  <text x="400" y="155" text-anchor="middle" class="arch-sub">/api/ai/experiments/*</text>
+                  <text x="400" y="180" text-anchor="middle" class="arch-pill">Experiment endpoints</text>
+
+                  <!-- Box 3: Context Builder -->
+                  <g filter="url(#arch-shadow)">
+                    <rect x="545" y="70" width="220" height="120" class="arch-box"/>
+                  </g>
+                  <text x="655" y="105" text-anchor="middle" class="arch-title">Context Builder</text>
+                  <text x="655" y="130" text-anchor="middle" class="arch-sub">MaxEntries - Order</text>
+                  <text x="655" y="155" text-anchor="middle" class="arch-sub">Compression - Metadata</text>
+                  <text x="655" y="180" text-anchor="middle" class="arch-pill">Deterministic packaging</text>
+
+                  <!-- Box 4: Semantic Kernel -->
+                  <g filter="url(#arch-shadow)">
+                    <rect x="805" y="70" width="220" height="120" class="arch-box"/>
+                  </g>
+                  <text x="915" y="100" text-anchor="middle" class="arch-title">Semantic Kernel (.NET)</text>
+                  <text x="915" y="122" text-anchor="middle" class="arch-sub">Provider abstraction</text>
+                  <text x="915" y="144" text-anchor="middle" class="arch-sub">Prompt templates + tools</text>
+                  <!-- Provider tags row 1 -->
+                  <text x="842" y="168" text-anchor="middle" class="provider-tag" fill="#10b981">OpenAI</text>
+                  <text x="888" y="168" text-anchor="middle" class="provider-tag" fill="#d97706">Claude</text>
+                  <text x="938" y="168" text-anchor="middle" class="provider-tag" fill="#4285f4">Gemini</text>
+                  <text x="988" y="168" text-anchor="middle" class="provider-tag" fill="#0ea5e9">Azure</text>
+                  <!-- Provider tags row 2 -->
+                  <text x="865" y="184" text-anchor="middle" class="provider-tag" fill="#6366f1">DeepSeek</text>
+                  <text x="938" y="184" text-anchor="middle" class="provider-tag" fill="#8b5cf6">Ollama</text>
+
+                  <!-- Arrows -->
+                  <path d="M 250 130 L 295 130" class="arch-arrow"/>
+                  <path d="M 505 130 L 545 130" class="arch-arrow"/>
+                  <path d="M 765 130 L 805 130" class="arch-arrow"/>
+
+                  <!-- Lower lane: LLM + Logs -->
+                  <!-- LLM box -->
+                  <g filter="url(#arch-shadow)">
+                    <rect x="740" y="200" width="285" height="70" class="arch-box"/>
+                  </g>
+                  <text x="882" y="228" text-anchor="middle" class="arch-title">LLM Provider</text>
+                  <text x="882" y="250" text-anchor="middle" class="arch-sub">Chat completion call (6 providers supported)</text>
+
+                  <!-- Logs box -->
+                  <g filter="url(#arch-shadow)">
+                    <rect x="295" y="200" width="420" height="70" class="arch-box"/>
+                  </g>
+                  <text x="505" y="232" text-anchor="middle" class="arch-title">Experiment Logs (EF Core)</text>
+                  <text x="505" y="255" text-anchor="middle" class="arch-sub">prompt hash - params - tokens - cost - retrieval</text>
+
+                  <!-- Arrow down from SK to LLM -->
+                  <path d="M 915 190 L 915 200" class="arch-arrow"/>
+
+                  <!-- Arrow from API down to Logs -->
+                  <path d="M 400 190 L 400 200" class="arch-arrow"/>
+
+                  <!-- Arrow from LLM back to Logs (diagonal) -->
+                  <path d="M 740 235 L 715 235" class="arch-arrow"/>
+
+                  <!-- Footer note -->
+                  <text x="550" y="55" text-anchor="middle" class="arch-note">
+                    Every run is reproducible: model + prompt version + context config + metrics
+                  </text>
+                </svg>
+            </div>
+        </div>
+
+        <!-- Experiment 1: Persona War -->
+        <div class="mb-5" id="personaExperiment">
+            <div class="experiment-section-header">
+                <h2 class="mb-2">
+                    <span class="me-2">Experiment 1: The Persona War</span>
+                </h2>
+                <p class="text-muted mb-3">Same athlete data. Same journal entries. Two radically different coaching responses.</p>
+
+                <!-- Run Metadata Badges -->
+                <div class="run-meta d-flex flex-wrap gap-2 align-items-center" id="personaRunMeta">
+                    <span class="badge rounded-pill text-bg-light border">
+                        Model: <strong id="personaModel">--</strong>
+                    </span>
+                    <span class="badge rounded-pill text-bg-light border">
+                        Temp: <strong id="personaTemp">--</strong>
+                    </span>
+                    <span class="badge rounded-pill text-bg-light border">
+                        Prompt: <strong id="personaPrompt">--</strong>
+                    </span>
+                    <span class="badge rounded-pill text-bg-light border">
+                        Context: <strong id="personaContext">--</strong>
+                    </span>
+                    <span class="badge rounded-pill text-bg-dark">
+                        Tokens: <strong id="personaTokens">--</strong>
+                    </span>
+                    <span class="badge rounded-pill text-bg-success">
+                        Est. $: <strong id="personaCost">--</strong>
+                    </span>
+                </div>
+            </div>
+
+            <div class="row g-4 position-relative" id="personaCardsContainer">
+                <div class="vs-badge d-none d-md-flex">VS</div>
+
+                <div class="col-md-6">
+                    <div class="card experiment-card persona-goggins h-100" id="gogginsCard">
+                        <div class="card-body p-4">
+                            <div class="d-flex align-items-center mb-2">
+                                <span style="font-size: 2rem" class="me-2">Fire</span>
+                                <div>
+                                    <h4 class="mb-0 fw-bold">Goggins Mode</h4>
+                                    <small class="opacity-75">No excuses. Stay hard.</small>
+                                </div>
+                            </div>
+
+                            <!-- Goggins-specific metadata -->
+                            <div class="run-meta-dark d-flex flex-wrap gap-1 mb-3">
+                                <span class="badge rounded-pill text-bg-light border" id="gogginsTokens">-- tokens</span>
+                                <span class="badge rounded-pill text-bg-light border" id="gogginsCost">$--</span>
+                                <span class="badge rounded-pill text-bg-light border" id="gogginsTime">--s</span>
+                                <button
+                                  class="btn btn-sm btn-outline-light ms-auto"
+                                  data-bs-toggle="offcanvas"
+                                  data-bs-target="#receiptsDrawer"
+                                  data-persona="goggins"
+                                  id="gogginsReceiptsBtn"
+                                >
+                                  Show receipts
+                                </button>
+                            </div>
+
+                            <div class="summary-text" id="gogginsSummary">
+                                <div class="skeleton" style="height: 200px;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="card experiment-card persona-lasso h-100" id="lassoCard">
+                        <div class="card-body p-4">
+                            <div class="d-flex align-items-center mb-2">
+                                <span style="font-size: 2rem" class="me-2">Heart</span>
+                                <div>
+                                    <h4 class="mb-0 fw-bold">Ted Lasso Mode</h4>
+                                    <small class="opacity-75">Believe. Be a goldfish.</small>
+                                </div>
+                            </div>
+
+                            <!-- Lasso-specific metadata -->
+                            <div class="run-meta d-flex flex-wrap gap-1 mb-3">
+                                <span class="badge rounded-pill text-bg-light border" id="lassoTokens">-- tokens</span>
+                                <span class="badge rounded-pill text-bg-light border" id="lassoCost">$--</span>
+                                <span class="badge rounded-pill text-bg-light border" id="lassoTime">--s</span>
+                                <button
+                                  class="btn btn-sm btn-outline-dark ms-auto"
+                                  data-bs-toggle="offcanvas"
+                                  data-bs-target="#receiptsDrawer"
+                                  data-persona="lasso"
+                                  id="lassoReceiptsBtn"
+                                >
+                                  Show receipts
+                                </button>
+                            </div>
+
+                            <div class="summary-text" id="lassoSummary">
+                                <div class="skeleton" style="height: 200px;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="insight-callout mt-4">
+                <strong>Research Insight:</strong> Same journal entries. Same facts.
+                But Goggins frames challenges as excuses to overcome, while Lasso frames them as body wisdom to honor.
+                <em>Neither is wrong - but the coaching impact is dramatically different.</em>
+            </div>
+        </div>
+
+        <!-- Experiment 2: The Dumb Zone -->
+        <div class="mb-5" id="positionExperiment">
+            <div class="experiment-section-header">
+                <h2 class="mb-2">
+                    <span class="me-2">Experiment 2: The "Dumb Zone"</span>
+                </h2>
+                <p class="text-muted mb-3">
+                    Testing the "Lost in the Middle" phenomenon - where does AI attention drop?
+                </p>
+
+                <!-- Run Metadata Badges -->
+                <div class="run-meta d-flex flex-wrap gap-2 align-items-center" id="positionRunMeta">
+                    <span class="badge rounded-pill text-bg-light border">
+                        Model: <strong id="positionModel">--</strong>
+                    </span>
+                    <span class="badge rounded-pill text-bg-light border">
+                        Temp: <strong id="positionTemp">--</strong>
+                    </span>
+                    <span class="badge rounded-pill text-bg-dark">
+                        Tokens: <strong id="positionTokens">--</strong>
+                    </span>
+                    <span class="badge rounded-pill text-bg-success">
+                        Est. $: <strong id="positionCost">--</strong>
+                    </span>
+                </div>
+            </div>
+
+            <!-- Needle Visualization -->
+            <div class="alert alert-warning border-0 mb-4" style="background: linear-gradient(90deg, #fef3c7, #fde68a); border-left: 5px solid #f59e0b !important;">
+                <div class="d-flex align-items-center">
+                    <span style="font-size: 1.5rem" class="me-3">Target</span>
+                    <div>
+                        <strong class="d-block">Target Fact:</strong>
+                        <code style="background: #78350f; color: #fef3c7; padding: 4px 12px; border-radius: 6px; font-size: 1rem;" id="needleFact">"Loading..."</code>
+                        <span class="text-muted ms-2">injected at each position...</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- U-Curve Visualization -->
+            <div class="row g-3 mb-4 align-items-end" id="positionResults">
+                <div class="col-md-4">
+                    <div class="context-zone zone-bright" style="min-height: 180px;" id="positionStart">
+                        <small class="text-success fw-bold d-block mb-2">POSITION: START</small>
+                        <small class="text-muted d-block mb-2">Entry #1</small>
+                        <div class="position-bar position-found" id="startResult">
+                            <span class="loading-spinner"></span>
+                        </div>
+                        <div class="mt-2 small text-success fw-bold">HIGH ATTENTION</div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="context-zone zone-dim" style="min-height: 140px; margin-top: 40px; border-width: 4px !important; border-color: #dc2626 !important;" id="positionMiddle">
+                        <small class="text-danger fw-bold d-block mb-2">POSITION: MIDDLE</small>
+                        <small class="text-muted d-block mb-2">Entry #4</small>
+                        <div class="position-bar position-missed" id="middleResult">
+                            <span class="loading-spinner"></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="context-zone zone-bright" style="min-height: 180px;" id="positionEnd">
+                        <small class="text-success fw-bold d-block mb-2">POSITION: END</small>
+                        <small class="text-muted d-block mb-2">Entry #7</small>
+                        <div class="position-bar position-found" id="endResult">
+                            <span class="loading-spinner"></span>
+                        </div>
+                        <div class="mt-2 small text-success fw-bold">HIGH ATTENTION</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- U-Curve Label -->
+            <div class="text-center mb-4">
+                <svg width="200" height="60" viewBox="0 0 200 60" class="mx-auto d-block">
+                    <path d="M 10 10 Q 100 50 190 10" stroke="#6366f1" stroke-width="3" fill="none" stroke-dasharray="5,5"/>
+                    <text x="100" y="55" text-anchor="middle" fill="#6366f1" font-size="12" font-weight="bold">U-Curve of Attention</text>
+                </svg>
+            </div>
+
+            <div class="insight-callout">
+                <strong>Research Insight:</strong> The AI may miss facts when they're buried in the middle of context.
+                This is the <strong>"U-Curve of Attention"</strong> - LLMs focus heavily on the start and end of context,
+                but the middle becomes a blind spot. <em>Your most important data might be invisible.</em>
+            </div>
+        </div>
+
+        <!-- Compare Providers Section -->
+        <div class="mb-5" id="compareProvidersSection">
+            <div class="experiment-section-header">
+                <h2 class="mb-2">
+                    <span class="me-2">Compare Providers</span>
+                    <span class="badge bg-primary ms-2">Multi-Provider</span>
+                </h2>
+                <p class="text-muted mb-3">
+                    Run the same position test across multiple AI providers to compare retrieval accuracy and costs.
+                </p>
+            </div>
+
+            <!-- Batch Runner Controls -->
+            <div class="config-panel mb-4">
+                <h6 class="fw-bold mb-3 text-white">Batch Experiment Runner</h6>
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <label class="form-label">Athlete ID</label>
+                        <input type="number" class="form-control" id="batchAthleteId" value="1" min="1">
+                    </div>
+                    <div class="col-md-5">
+                        <label class="form-label">Needle Fact</label>
+                        <input type="text" class="form-control" id="batchNeedleFact" value="Shin splints on Tuesday" placeholder="Fact to inject at each position">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Temperature</label>
+                        <input type="number" class="form-control" id="batchTemp" value="0.3" min="0" max="2" step="0.1">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Max Entries</label>
+                        <input type="number" class="form-control" id="batchMaxEntries" value="7" min="1" max="50">
+                    </div>
+                </div>
+
+                <div class="mt-3">
+                    <label class="form-label mb-2">Select Providers to Test</label>
+                    <div class="d-flex flex-wrap gap-2">
+                        <label class="provider-checkbox">
+                            <input type="checkbox" id="providerOpenAI" value="openai" checked>
+                            <div>
+                                <div class="provider-name">OpenAI</div>
+                                <div class="provider-model">gpt-4o-mini</div>
+                            </div>
+                        </label>
+                        <label class="provider-checkbox">
+                            <input type="checkbox" id="providerAnthropic" value="anthropic">
+                            <div>
+                                <div class="provider-name">Anthropic</div>
+                                <div class="provider-model">claude-3-haiku</div>
+                            </div>
+                        </label>
+                        <label class="provider-checkbox">
+                            <input type="checkbox" id="providerGoogle" value="google">
+                            <div>
+                                <div class="provider-name">Google</div>
+                                <div class="provider-model">gemini-1.5-flash</div>
+                            </div>
+                        </label>
+                        <label class="provider-checkbox">
+                            <input type="checkbox" id="providerDeepSeek" value="deepseek">
+                            <div>
+                                <div class="provider-name">DeepSeek</div>
+                                <div class="provider-model">deepseek-chat</div>
+                            </div>
+                        </label>
+                        <label class="provider-checkbox">
+                            <input type="checkbox" id="providerOllama" value="ollama">
+                            <div>
+                                <div class="provider-name">Ollama</div>
+                                <div class="provider-model">llama3.2 (local)</div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="row mt-3">
+                    <div class="col-md-8">
+                        <button class="btn btn-success" id="runBatchBtn">
+                            Run Batch Comparison
+                        </button>
+                        <button class="btn btn-outline-light ms-2" id="clearComparisonBtn">
+                            Clear Results
+                        </button>
+                    </div>
+                    <div class="col-md-4 text-end">
+                        <button class="btn btn-export" id="exportCsvBtn">
+                            Export to CSV
+                        </button>
+                        <button class="btn btn-primary ms-2" id="downloadReportBtn" disabled title="Run a batch experiment first">
+                            Download Report
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Batch Progress -->
+                <div class="batch-progress" id="batchProgress" style="display: none;">
+                    <div class="batch-progress-bar">
+                        <div class="batch-progress-fill" id="batchProgressFill" style="width: 0%;"></div>
+                    </div>
+                    <div class="batch-progress-text" id="batchProgressText">Starting batch experiments...</div>
+                </div>
+            </div>
+
+            <!-- Comparison Grid -->
+            <div class="card experiment-card mb-4">
+                <div class="card-header bg-light fw-bold d-flex justify-content-between align-items-center">
+                    <span>Position Retrieval by Provider</span>
+                    <small class="text-muted">Hover cells for retrieval percentage</small>
+                </div>
+                <div class="card-body p-3">
+                    <div class="comparison-grid" id="comparisonGrid" style="grid-template-columns: 120px repeat(5, 1fr);">
+                        <!-- Header Row -->
+                        <div class="comparison-cell header">Position</div>
+                        <div class="comparison-cell header">
+                            <div>OpenAI</div>
+                            <small class="text-muted">gpt-4o-mini</small>
+                        </div>
+                        <div class="comparison-cell header">
+                            <div>Anthropic</div>
+                            <small class="text-muted">claude-3-haiku</small>
+                        </div>
+                        <div class="comparison-cell header">
+                            <div>Google</div>
+                            <small class="text-muted">gemini-1.5-flash</small>
+                        </div>
+                        <div class="comparison-cell header">
+                            <div>DeepSeek</div>
+                            <small class="text-muted">deepseek-chat</small>
+                        </div>
+                        <div class="comparison-cell header">
+                            <div>Ollama</div>
+                            <small class="text-muted">llama3.2</small>
+                        </div>
+
+                        <!-- Start Row -->
+                        <div class="comparison-cell row-header">Start</div>
+                        <div class="comparison-cell pending" id="cell-openai-start"></div>
+                        <div class="comparison-cell pending" id="cell-anthropic-start"></div>
+                        <div class="comparison-cell pending" id="cell-google-start"></div>
+                        <div class="comparison-cell pending" id="cell-deepseek-start"></div>
+                        <div class="comparison-cell pending" id="cell-ollama-start"></div>
+
+                        <!-- Middle Row -->
+                        <div class="comparison-cell row-header">Middle</div>
+                        <div class="comparison-cell pending" id="cell-openai-middle"></div>
+                        <div class="comparison-cell pending" id="cell-anthropic-middle"></div>
+                        <div class="comparison-cell pending" id="cell-google-middle"></div>
+                        <div class="comparison-cell pending" id="cell-deepseek-middle"></div>
+                        <div class="comparison-cell pending" id="cell-ollama-middle"></div>
+
+                        <!-- End Row -->
+                        <div class="comparison-cell row-header">End</div>
+                        <div class="comparison-cell pending" id="cell-openai-end"></div>
+                        <div class="comparison-cell pending" id="cell-anthropic-end"></div>
+                        <div class="comparison-cell pending" id="cell-google-end"></div>
+                        <div class="comparison-cell pending" id="cell-deepseek-end"></div>
+                        <div class="comparison-cell pending" id="cell-ollama-end"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Cost Comparison Chart -->
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <div class="card experiment-card">
+                        <div class="card-header bg-light fw-bold">Token Usage by Provider</div>
+                        <div class="card-body" id="tokenComparisonChart">
+                            <div class="cost-bar-container" data-provider="openai">
+                                <div class="cost-bar-label">
+                                    <span class="provider-name">OpenAI</span>
+                                    <span class="cost-value" id="tokens-openai">-- tokens</span>
+                                </div>
+                                <div class="cost-bar">
+                                    <div class="cost-bar-fill openai" id="tokenbar-openai" style="width: 0%;"></div>
+                                </div>
+                            </div>
+                            <div class="cost-bar-container" data-provider="anthropic">
+                                <div class="cost-bar-label">
+                                    <span class="provider-name">Anthropic</span>
+                                    <span class="cost-value" id="tokens-anthropic">-- tokens</span>
+                                </div>
+                                <div class="cost-bar">
+                                    <div class="cost-bar-fill anthropic" id="tokenbar-anthropic" style="width: 0%;"></div>
+                                </div>
+                            </div>
+                            <div class="cost-bar-container" data-provider="google">
+                                <div class="cost-bar-label">
+                                    <span class="provider-name">Google</span>
+                                    <span class="cost-value" id="tokens-google">-- tokens</span>
+                                </div>
+                                <div class="cost-bar">
+                                    <div class="cost-bar-fill google" id="tokenbar-google" style="width: 0%;"></div>
+                                </div>
+                            </div>
+                            <div class="cost-bar-container" data-provider="deepseek">
+                                <div class="cost-bar-label">
+                                    <span class="provider-name">DeepSeek</span>
+                                    <span class="cost-value" id="tokens-deepseek">-- tokens</span>
+                                </div>
+                                <div class="cost-bar">
+                                    <div class="cost-bar-fill deepseek" id="tokenbar-deepseek" style="width: 0%;"></div>
+                                </div>
+                            </div>
+                            <div class="cost-bar-container" data-provider="ollama">
+                                <div class="cost-bar-label">
+                                    <span class="provider-name">Ollama (Local)</span>
+                                    <span class="cost-value" id="tokens-ollama">-- tokens</span>
+                                </div>
+                                <div class="cost-bar">
+                                    <div class="cost-bar-fill ollama" id="tokenbar-ollama" style="width: 0%;"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card experiment-card">
+                        <div class="card-header bg-light fw-bold">Estimated Cost by Provider</div>
+                        <div class="card-body" id="costComparisonChart">
+                            <div class="cost-bar-container" data-provider="openai">
+                                <div class="cost-bar-label">
+                                    <span class="provider-name">OpenAI</span>
+                                    <span class="cost-value" id="cost-openai">$--</span>
+                                </div>
+                                <div class="cost-bar">
+                                    <div class="cost-bar-fill openai" id="costbar-openai" style="width: 0%;"></div>
+                                </div>
+                            </div>
+                            <div class="cost-bar-container" data-provider="anthropic">
+                                <div class="cost-bar-label">
+                                    <span class="provider-name">Anthropic</span>
+                                    <span class="cost-value" id="cost-anthropic">$--</span>
+                                </div>
+                                <div class="cost-bar">
+                                    <div class="cost-bar-fill anthropic" id="costbar-anthropic" style="width: 0%;"></div>
+                                </div>
+                            </div>
+                            <div class="cost-bar-container" data-provider="google">
+                                <div class="cost-bar-label">
+                                    <span class="provider-name">Google</span>
+                                    <span class="cost-value" id="cost-google">$--</span>
+                                </div>
+                                <div class="cost-bar">
+                                    <div class="cost-bar-fill google" id="costbar-google" style="width: 0%;"></div>
+                                </div>
+                            </div>
+                            <div class="cost-bar-container" data-provider="deepseek">
+                                <div class="cost-bar-label">
+                                    <span class="provider-name">DeepSeek</span>
+                                    <span class="cost-value" id="cost-deepseek">$--</span>
+                                </div>
+                                <div class="cost-bar">
+                                    <div class="cost-bar-fill deepseek" id="costbar-deepseek" style="width: 0%;"></div>
+                                </div>
+                            </div>
+                            <div class="cost-bar-container" data-provider="ollama">
+                                <div class="cost-bar-label">
+                                    <span class="provider-name">Ollama (Local)</span>
+                                    <span class="cost-value" id="cost-ollama">$0.00 (free)</span>
+                                </div>
+                                <div class="cost-bar">
+                                    <div class="cost-bar-fill ollama" id="costbar-ollama" style="width: 0%;"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="insight-callout mt-4">
+                <strong>Research Insight:</strong> Different providers may exhibit different attention patterns.
+                Some may be more robust to the "lost in the middle" problem than others.
+                <em>Use this comparison to choose the right provider for your specific use case and budget.</em>
+            </div>
+        </div>
+
+        <!-- Experiment 3: Compression -->
+        <div class="mb-5" id="compressionExperiment">
+            <div class="experiment-section-header">
+                <h2 class="mb-2">
+                    <span class="me-2">Experiment 3: Context Compression Trade-offs</span>
+                </h2>
+                <p class="text-muted mb-3">
+                    Can we save tokens (and money) by compressing context? What do we lose?
+                </p>
+
+                <!-- Run Metadata Badges -->
+                <div class="run-meta d-flex flex-wrap gap-2 align-items-center" id="compressionRunMeta">
+                    <span class="badge rounded-pill text-bg-light border">
+                        Model: <strong id="compressionModel">--</strong>
+                    </span>
+                    <span class="badge rounded-pill text-bg-dark">
+                        Tokens: <strong id="compressionTokens">--</strong>
+                    </span>
+                    <span class="badge rounded-pill text-bg-success">
+                        Est. $: <strong id="compressionCost">--</strong>
+                    </span>
+                </div>
+            </div>
+
+            <div class="row g-4" id="compressionCards">
+                <div class="col-md-4">
+                    <div class="card experiment-card">
+                        <div class="card-header bg-success text-white fw-bold">
+                            Full Context
+                            <span class="badge bg-light text-success float-end">BASELINE</span>
+                        </div>
+                        <div class="card-body">
+                            <div class="token-bar mb-2">
+                                <div class="token-fill token-full" style="width: 100%" id="fullTokenBar">-- tokens</div>
+                            </div>
+                            <small class="text-muted">All entries, full text</small>
+                            <div class="run-meta d-flex flex-wrap gap-1 mt-2 mb-3">
+                                <span class="badge rounded-pill text-bg-light border small" id="fullCost">$--</span>
+                            </div>
+                            <hr>
+                            <div class="small" id="fullResults">
+                                <div class="skeleton" style="height: 60px;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card experiment-card">
+                        <div class="card-header bg-warning fw-bold">
+                            Compressed
+                            <span class="badge bg-dark float-end" id="compressedSavings">--%</span>
+                        </div>
+                        <div class="card-body">
+                            <div class="token-bar mb-2">
+                                <div class="token-fill token-medium" style="width: 45%" id="compressedTokenBar">-- tokens</div>
+                            </div>
+                            <small class="text-muted">Summarized entries</small>
+                            <div class="run-meta d-flex flex-wrap gap-1 mt-2 mb-3">
+                                <span class="badge rounded-pill text-bg-light border small" id="compressedCost">$--</span>
+                            </div>
+                            <hr>
+                            <div class="small" id="compressedResults">
+                                <div class="skeleton" style="height: 60px;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card experiment-card">
+                        <div class="card-header bg-danger text-white fw-bold">
+                            Limited (3 entries)
+                            <span class="badge bg-dark float-end" id="limitedSavings">--%</span>
+                        </div>
+                        <div class="card-body">
+                            <div class="token-bar mb-2">
+                                <div class="token-fill token-low" style="width: 25%" id="limitedTokenBar">-- tokens</div>
+                            </div>
+                            <small class="text-muted">Most recent only</small>
+                            <div class="run-meta d-flex flex-wrap gap-1 mt-2 mb-3">
+                                <span class="badge rounded-pill text-bg-light border small" id="limitedCost">$--</span>
+                            </div>
+                            <hr>
+                            <div class="small" id="limitedResults">
+                                <div class="skeleton" style="height: 60px;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="insight-callout mt-4">
+                <strong>Research Insight:</strong> Compression can save tokens but may lose critical context.
+                Important facts from older entries might be completely lost when limiting to recent entries only.
+                <em>Cheaper isn't always better.</em>
+            </div>
+        </div>
+
+        <!-- FinOps Dashboard -->
+        <div class="mb-5" id="finopsDashboard">
+            <div class="experiment-section-header">
+                <h2 class="mb-2">
+                    <span class="me-2">FinOps Dashboard</span>
+                    <span class="badge bg-success ms-2">Cost Tracking</span>
+                </h2>
+                <p class="text-muted mb-3">
+                    Real-time cost observability for AI operations - the metrics engineering managers actually want to see.
+                </p>
+
+                <!-- Session Metadata Badges -->
+                <div class="run-meta d-flex flex-wrap gap-2 align-items-center" id="finopsRunMeta">
+                    <span class="badge rounded-pill text-bg-light border">
+                        Model: <strong id="finopsModel">--</strong>
+                    </span>
+                    <span class="badge rounded-pill text-bg-dark">
+                        Total Calls: <strong id="finopsCalls">--</strong>
+                    </span>
+                    <span class="badge rounded-pill text-bg-success">
+                        Session Total: <strong id="finopsTotal">$--</strong>
+                    </span>
+                </div>
+            </div>
+
+            <div class="row g-4 mb-4" id="finopsCards">
+                <div class="col-md-3">
+                    <div class="card experiment-card text-center p-4">
+                        <h3 class="text-success mb-1" id="sessionCost">$--</h3>
+                        <small class="text-muted">Session Cost</small>
+                        <div class="mt-2 small text-muted" id="sessionCalls">-- API calls</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card experiment-card text-center p-4">
+                        <h3 class="text-primary mb-1" id="avgCost">$--</h3>
+                        <small class="text-muted">Avg Cost/Call</small>
+                        <div class="mt-2 small text-muted" id="avgModel">--</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card experiment-card text-center p-4">
+                        <h3 class="text-warning mb-1" id="projectedMonthly">$--</h3>
+                        <small class="text-muted">Projected Monthly</small>
+                        <div class="mt-2 small text-muted">@ 100 calls/day</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card experiment-card text-center p-4">
+                        <h3 class="text-info mb-1" id="totalTokens">--</h3>
+                        <small class="text-muted">Total Tokens</small>
+                        <div class="mt-2 small text-muted">prompt + completion</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <div class="card experiment-card">
+                        <div class="card-header bg-light fw-bold">Cost by Persona</div>
+                        <div class="card-body" id="costByPersona">
+                            <div class="skeleton" style="height: 100px;"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card experiment-card">
+                        <div class="card-header bg-light fw-bold">Cost Optimization Tips</div>
+                        <div class="card-body">
+                            <ul class="list-unstyled mb-0">
+                                <li class="mb-2">Enable compression to save ~45% on tokens</li>
+                                <li class="mb-2">Use MaxEntries=7 to cap context size</li>
+                                <li class="mb-2">No wasted spend on failed calls</li>
+                                <li class="mb-2">Consider smaller models for 70% cost reduction (test quality first)</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="insight-callout mt-4">
+                <strong>Research Insight:</strong> AI coaching can be extremely cost-effective. At typical pricing,
+                this system can cost less than <strong>$1/month</strong> for a typical athlete logging daily.
+                <em>FinOps isn't just about cutting costs - it's about proving ROI.</em>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="text-center text-muted py-4">
+            <div class="mb-3">
+                <span class="badge rounded-pill text-bg-secondary me-2" id="footerDataBadge">DEMO DATA</span>
+                <span class="badge rounded-pill text-bg-light border">Research UI - Not medical advice</span>
+            </div>
+            <p class="mb-1">
+                <strong>MindSetCoach Context Engineering Lab</strong>
+            </p>
+            <small>
+                Built by Ben Marino | Research into AI coaching reliability
+            </small>
+        </div>
+
+    </div>
+
+    <!-- Receipts Drawer (Bootstrap Offcanvas) -->
+    <div class="offcanvas offcanvas-end" tabindex="-1" id="receiptsDrawer" aria-labelledby="receiptsDrawerLabel">
+      <div class="offcanvas-header">
+        <div>
+          <h5 class="offcanvas-title fw-bold" id="receiptsDrawerLabel">Claims to Receipts</h5>
+          <div class="small text-muted" id="receiptsMeta">Loading...</div>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+      </div>
+
+      <div class="offcanvas-body">
+        <!-- Summary row -->
+        <div class="d-flex flex-wrap gap-2 mb-3" id="receiptsBadges">
+          <!-- populated via JS -->
+        </div>
+
+        <!-- Claim list -->
+        <div class="list-group" id="claimsList">
+          <!-- populated via JS -->
+        </div>
+
+        <hr class="my-4">
+
+        <!-- Evidence viewer -->
+        <div>
+          <div class="d-flex align-items-center justify-content-between">
+            <h6 class="fw-bold mb-2">Evidence</h6>
+            <span class="badge rounded-pill text-bg-light border" id="evidenceCount">0 receipts</span>
+          </div>
+
+          <div id="evidencePanel">
+            <div class="text-muted small">Select a claim to view receipts.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Run Experiment Modal -->
+    <div class="modal fade" id="runExperimentModal" tabindex="-1" aria-labelledby="runExperimentModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header bg-success text-white">
+            <h5 class="modal-title fw-bold" id="runExperimentModalLabel">Run New Experiment</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <form id="experimentForm">
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <label class="form-label fw-bold">Athlete ID</label>
+                  <input type="number" class="form-control" id="expAthleteId" value="1" required>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label fw-bold">Experiment Type</label>
+                  <select class="form-select" id="expType" required>
+                    <option value="persona">Persona Comparison</option>
+                    <option value="position">Position Test (U-Curve)</option>
+                    <option value="compression">Compression Test</option>
+                  </select>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label fw-bold">Provider</label>
+                  <select class="form-select" id="expProvider" required>
+                    <option value="openai">OpenAI</option>
+                    <option value="anthropic">Anthropic (Claude)</option>
+                    <option value="google">Google (Gemini)</option>
+                    <option value="azure">Azure OpenAI</option>
+                    <option value="deepseek">DeepSeek</option>
+                    <option value="ollama">Ollama (Local)</option>
+                  </select>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label fw-bold">Model</label>
+                  <input type="text" class="form-control" id="expModel" value="gpt-4o-mini" required>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label fw-bold">Persona</label>
+                  <select class="form-select" id="expPersona">
+                    <option value="lasso">Ted Lasso</option>
+                    <option value="goggins">David Goggins</option>
+                  </select>
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label fw-bold">Temperature</label>
+                  <input type="number" class="form-control" id="expTemp" value="0.7" min="0" max="2" step="0.1">
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label fw-bold">Max Entries</label>
+                  <input type="number" class="form-control" id="expMaxEntries" value="7" min="1" max="50">
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label fw-bold">Entry Order</label>
+                  <select class="form-select" id="expOrder">
+                    <option value="reverse">Reverse (newest first)</option>
+                    <option value="chrono">Chronological (oldest first)</option>
+                  </select>
+                </div>
+                <div class="col-12" id="needleFactGroup">
+                  <label class="form-label fw-bold">Needle Fact (for position tests)</label>
+                  <input type="text" class="form-control" id="expNeedleFact" placeholder="e.g., Shin splints on Tuesday">
+                </div>
+              </div>
+            </form>
+
+            <!-- SSE Progress Log -->
+            <div class="mt-4" id="sseProgressContainer" style="display: none;">
+              <h6 class="fw-bold mb-2">Experiment Progress</h6>
+              <div class="sse-log" id="sseLog"></div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            <button type="button" class="btn btn-success" id="startExperimentBtn">
+              Start Experiment
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+      // ====================================================================
+      // API Configuration
+      // ====================================================================
+      const config = {
+        get apiBaseUrl() {
+          return document.getElementById('apiBaseUrl').value.replace(/\/$/, '');
+        },
+        get jwtToken() {
+          return document.getElementById('jwtToken').value;
+        }
+      };
+
+      // Current loaded data
+      let currentRun = null;
+      let allRuns = [];
+      let sseConnection = null;
+
+      // ====================================================================
+      // API Client
+      // ====================================================================
+      async function apiFetch(endpoint, options = {}) {
+        const url = `${config.apiBaseUrl}${endpoint}`;
+        const headers = {
+          'Content-Type': 'application/json',
+          ...options.headers
+        };
+
+        if (config.jwtToken) {
+          headers['Authorization'] = `Bearer ${config.jwtToken}`;
+        }
+
+        const response = await fetch(url, {
+          ...options,
+          headers
+        });
+
+        if (!response.ok) {
+          const error = await response.json().catch(() => ({ error: response.statusText }));
+          throw new Error(error.error || error.message || `HTTP ${response.status}`);
+        }
+
+        return response.json();
+      }
+
+      // ====================================================================
+      // Connection Status
+      // ====================================================================
+      function updateConnectionStatus(status, message) {
+        const el = document.getElementById('connectionStatus');
+        const dotClasses = {
+          connected: 'status-connected',
+          disconnected: 'status-disconnected',
+          connecting: 'status-connecting'
+        };
+
+        el.innerHTML = `
+          <span class="status-dot ${dotClasses[status] || 'status-disconnected'}"></span>
+          <span>${message}</span>
+        `;
+      }
+
+      function showError(containerId, message) {
+        const el = document.getElementById(containerId);
+        el.style.display = 'block';
+        el.innerHTML = `
+          <div class="error-banner">
+            <strong>Error:</strong> ${message}
+          </div>
+        `;
+      }
+
+      function hideError(containerId) {
+        const el = document.getElementById(containerId);
+        el.style.display = 'none';
+      }
+
+      // ====================================================================
+      // Test Connection
+      // ====================================================================
+      async function testConnection() {
+        const btn = document.getElementById('testConnectionBtn');
+        btn.innerHTML = '<span class="loading-spinner"></span> Testing...';
+        btn.disabled = true;
+        hideError('connectionError');
+        updateConnectionStatus('connecting', 'Connecting...');
+
+        try {
+          const stats = await apiFetch('/api/experiments/stats');
+          updateConnectionStatus('connected', 'Connected');
+          btn.innerHTML = 'Connected!';
+          btn.classList.remove('btn-light');
+          btn.classList.add('btn-success');
+
+          // Update data source badge
+          document.getElementById('dataSourceBadge').textContent = 'LIVE DATA';
+          document.getElementById('dataSourceBadge').classList.remove('text-bg-secondary');
+          document.getElementById('dataSourceBadge').classList.add('text-bg-success');
+          document.getElementById('footerDataBadge').textContent = 'LIVE DATA';
+          document.getElementById('footerDataBadge').classList.remove('text-bg-secondary');
+          document.getElementById('footerDataBadge').classList.add('text-bg-success');
+
+          // Auto-load runs
+          await loadRuns();
+
+          setTimeout(() => {
+            btn.innerHTML = 'Test Connection';
+            btn.classList.remove('btn-success');
+            btn.classList.add('btn-light');
+            btn.disabled = false;
+          }, 2000);
+        } catch (err) {
+          updateConnectionStatus('disconnected', 'Not connected');
+          showError('connectionError', err.message);
+          btn.innerHTML = 'Connection Failed';
+          btn.classList.remove('btn-light');
+          btn.classList.add('btn-danger');
+          setTimeout(() => {
+            btn.innerHTML = 'Test Connection';
+            btn.classList.remove('btn-danger');
+            btn.classList.add('btn-light');
+            btn.disabled = false;
+          }, 2000);
+        }
+      }
+
+      // ====================================================================
+      // Load Runs
+      // ====================================================================
+      async function loadRuns() {
+        const btn = document.getElementById('loadRunsBtn');
+        const selector = document.getElementById('runSelector');
+        btn.innerHTML = '<span class="loading-spinner"></span> Loading...';
+        btn.disabled = true;
+
+        try {
+          allRuns = await apiFetch('/api/experiments/runs?limit=50');
+
+          selector.innerHTML = '<option value="">-- Select a run --</option>';
+
+          if (allRuns.length === 0) {
+            selector.innerHTML += '<option value="" disabled>No runs found</option>';
+          } else {
+            allRuns.forEach(run => {
+              const date = new Date(run.startedAt).toLocaleDateString();
+              const status = run.status === 'completed' ? 'Done' : run.status;
+              selector.innerHTML += `
+                <option value="${run.id}">
+                  #${run.id} - ${run.experimentType} - ${run.model} (${date}) [${status}]
+                </option>
+              `;
+            });
+          }
+
+          btn.innerHTML = 'Refresh Runs';
+        } catch (err) {
+          showError('connectionError', `Failed to load runs: ${err.message}`);
+          btn.innerHTML = 'Retry';
+        } finally {
+          btn.disabled = false;
+        }
+      }
+
+      // ====================================================================
+      // Load Single Run Details
+      // ====================================================================
+      async function loadRunDetails(runId) {
+        if (!runId) return;
+
+        try {
+          currentRun = await apiFetch(`/api/experiments/runs/${runId}`);
+          renderRunData(currentRun);
+        } catch (err) {
+          showError('connectionError', `Failed to load run details: ${err.message}`);
+        }
+      }
+
+      // ====================================================================
+      // Render Run Data to UI
+      // ====================================================================
+      function renderRunData(run) {
+        // Update persona experiment section
+        document.getElementById('personaModel').textContent = run.model;
+        document.getElementById('personaTemp').textContent = run.temperature;
+        document.getElementById('personaPrompt').textContent = run.promptVersion || 'v1';
+        document.getElementById('personaContext').textContent = `${run.entries} entries - ${run.order}`;
+        document.getElementById('personaTokens').textContent = run.tokens.toLocaleString();
+        document.getElementById('personaCost').textContent = `$${run.estCost.toFixed(5)}`;
+
+        // Render persona claims if available
+        if (run.personaClaims) {
+          renderPersonaClaims(run.personaClaims);
+        }
+
+        // Render position results if available
+        if (run.positionResults) {
+          renderPositionResults(run.positionResults);
+        }
+
+        // Update FinOps
+        renderFinOps(run);
+      }
+
+      function renderPersonaClaims(personaClaims) {
+        // Goggins
+        if (personaClaims.goggins && personaClaims.goggins.length > 0) {
+          const gogginsClaims = personaClaims.goggins;
+          const gogginsText = gogginsClaims.map(c => c.claim).join('\n\n');
+          document.getElementById('gogginsSummary').innerHTML = formatClaimsAsText(gogginsClaims, 'goggins');
+          document.getElementById('gogginsTokens').textContent = `${currentRun.tokens} tokens`;
+          document.getElementById('gogginsCost').textContent = `$${currentRun.estCost.toFixed(5)}`;
+        }
+
+        // Lasso
+        if (personaClaims.lasso && personaClaims.lasso.length > 0) {
+          const lassoClaims = personaClaims.lasso;
+          document.getElementById('lassoSummary').innerHTML = formatClaimsAsText(lassoClaims, 'lasso');
+          document.getElementById('lassoTokens').textContent = `${currentRun.tokens} tokens`;
+          document.getElementById('lassoCost').textContent = `$${currentRun.estCost.toFixed(5)}`;
+        }
+      }
+
+      function formatClaimsAsText(claims, persona) {
+        const quote = persona === 'goggins'
+          ? '<span class="quote">"Stay hard."</span>'
+          : '<span class="quote">"Believe."</span>';
+
+        let html = quote + '\n\n';
+        claims.forEach(c => {
+          const icon = c.isSupported ? 'Supported' : 'Unverified';
+          html += `<strong>${icon}:</strong> ${c.claim}\n\n`;
+        });
+        return html;
+      }
+
+      function renderPositionResults(results) {
+        // Start position
+        const startEl = document.getElementById('startResult');
+        if (results.start) {
+          startEl.className = results.start.found ? 'position-bar position-found' : 'position-bar position-missed';
+          startEl.innerHTML = results.start.found
+            ? 'FOUND<small class="fw-normal opacity-75">100% retrieval</small>'
+            : 'MISSED<strong class="d-block text-white">0% retrieval</strong>';
+          document.getElementById('positionStart').className = results.start.found ? 'context-zone zone-bright' : 'context-zone zone-dim';
+        }
+
+        // Middle position
+        const middleEl = document.getElementById('middleResult');
+        if (results.middle) {
+          middleEl.className = results.middle.found ? 'position-bar position-found' : 'position-bar position-missed';
+          middleEl.innerHTML = results.middle.found
+            ? 'FOUND<small class="fw-normal opacity-75">100% retrieval</small>'
+            : 'MISSED<strong class="d-block text-white">0% retrieval</strong>';
+        }
+
+        // End position
+        const endEl = document.getElementById('endResult');
+        if (results.end) {
+          endEl.className = results.end.found ? 'position-bar position-found' : 'position-bar position-missed';
+          endEl.innerHTML = results.end.found
+            ? 'FOUND<small class="fw-normal opacity-75">100% retrieval</small>'
+            : 'MISSED<strong class="d-block text-white">0% retrieval</strong>';
+          document.getElementById('positionEnd').className = results.end.found ? 'context-zone zone-bright' : 'context-zone zone-dim';
+        }
+
+        // Update needle fact display
+        const needleFact = results.start?.needleFact || results.middle?.needleFact || results.end?.needleFact;
+        if (needleFact) {
+          document.getElementById('needleFact').textContent = `"${needleFact}"`;
+        }
+
+        // Update position meta
+        document.getElementById('positionModel').textContent = currentRun.model;
+        document.getElementById('positionTemp').textContent = currentRun.temperature;
+        document.getElementById('positionTokens').textContent = currentRun.tokens.toLocaleString();
+        document.getElementById('positionCost').textContent = `$${currentRun.estCost.toFixed(5)}`;
+      }
+
+      function renderFinOps(run) {
+        const totalCost = run.estCost;
+        const tokens = run.tokens;
+
+        document.getElementById('finopsModel').textContent = run.model;
+        document.getElementById('finopsCalls').textContent = '1';
+        document.getElementById('finopsTotal').textContent = `$${totalCost.toFixed(5)}`;
+
+        document.getElementById('sessionCost').textContent = `$${totalCost.toFixed(4)}`;
+        document.getElementById('sessionCalls').textContent = '1 API call';
+        document.getElementById('avgCost').textContent = `$${totalCost.toFixed(5)}`;
+        document.getElementById('avgModel').textContent = run.model;
+        document.getElementById('projectedMonthly').textContent = `$${(totalCost * 100 * 30).toFixed(2)}`;
+        document.getElementById('totalTokens').textContent = tokens.toLocaleString();
+
+        // Cost by persona
+        const costByPersona = document.getElementById('costByPersona');
+        if (run.personaClaims) {
+          const gogginsCost = run.personaClaims.goggins ? totalCost / 2 : 0;
+          const lassoCost = run.personaClaims.lasso ? totalCost / 2 : 0;
+          costByPersona.innerHTML = `
+            <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+              <span>Fire Goggins Mode</span>
+              <span>
+                <span class="badge bg-dark">$${gogginsCost.toFixed(5)}</span>
+                <small class="text-muted ms-2">${run.personaClaims.goggins?.length || 0} claims</small>
+              </span>
+            </div>
+            <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+              <span>Heart Lasso Mode</span>
+              <span>
+                <span class="badge bg-warning text-dark">$${lassoCost.toFixed(5)}</span>
+                <small class="text-muted ms-2">${run.personaClaims.lasso?.length || 0} claims</small>
+              </span>
+            </div>
+          `;
+        } else {
+          costByPersona.innerHTML = '<div class="text-muted">No persona data available</div>';
+        }
+      }
+
+      // ====================================================================
+      // Run Experiment
+      // ====================================================================
+      async function runExperiment() {
+        const btn = document.getElementById('startExperimentBtn');
+        btn.innerHTML = '<span class="loading-spinner"></span> Starting...';
+        btn.disabled = true;
+
+        const request = {
+          athleteId: parseInt(document.getElementById('expAthleteId').value),
+          experimentType: document.getElementById('expType').value,
+          provider: document.getElementById('expProvider').value,
+          model: document.getElementById('expModel').value,
+          persona: document.getElementById('expPersona').value,
+          temperature: parseFloat(document.getElementById('expTemp').value),
+          maxEntries: parseInt(document.getElementById('expMaxEntries').value),
+          entryOrder: document.getElementById('expOrder').value
+        };
+
+        const needleFact = document.getElementById('expNeedleFact').value;
+        if (needleFact && request.experimentType === 'position') {
+          request.needleFact = needleFact;
+        }
+
+        try {
+          const response = await apiFetch('/api/experiments/run', {
+            method: 'POST',
+            body: JSON.stringify(request)
+          });
+
+          // Show SSE progress
+          document.getElementById('sseProgressContainer').style.display = 'block';
+          document.getElementById('sseLog').innerHTML = '';
+
+          // Connect to SSE stream
+          connectToSSE(response.runId);
+
+          btn.innerHTML = 'Running...';
+        } catch (err) {
+          btn.innerHTML = 'Start Experiment';
+          btn.disabled = false;
+          alert(`Failed to start experiment: ${err.message}`);
+        }
+      }
+
+      function connectToSSE(runId) {
+        const logEl = document.getElementById('sseLog');
+
+        // Close existing connection
+        if (sseConnection) {
+          sseConnection.close();
+        }
+
+        const url = `${config.apiBaseUrl}/api/experiments/runs/${runId}/stream`;
+
+        // Create EventSource with auth header workaround
+        // Note: Standard EventSource doesn't support custom headers
+        // For JWT auth, you may need to use fetch with ReadableStream or pass token as query param
+        sseConnection = new EventSource(url);
+
+        sseConnection.onopen = () => {
+          appendSSELog('info', 'Connected to experiment stream...');
+        };
+
+        sseConnection.addEventListener('progress', (e) => {
+          const data = JSON.parse(e.data);
+          appendSSELog('progress', data.message);
+        });
+
+        sseConnection.addEventListener('claim', (e) => {
+          const data = JSON.parse(e.data);
+          appendSSELog('claim', `Claim: ${data.message}`);
+        });
+
+        sseConnection.addEventListener('position', (e) => {
+          const data = JSON.parse(e.data);
+          appendSSELog('position', `Position test: ${data.message}`);
+        });
+
+        sseConnection.addEventListener('complete', (e) => {
+          const data = JSON.parse(e.data);
+          appendSSELog('complete', 'Experiment completed!');
+          sseConnection.close();
+
+          // Reset button
+          document.getElementById('startExperimentBtn').innerHTML = 'Start Experiment';
+          document.getElementById('startExperimentBtn').disabled = false;
+
+          // Reload runs and load the new run
+          loadRuns().then(() => {
+            loadRunDetails(runId);
+            document.getElementById('runSelector').value = runId.toString();
+          });
+        });
+
+        sseConnection.addEventListener('error', (e) => {
+          try {
+            const data = JSON.parse(e.data);
+            appendSSELog('error', data.message || 'Unknown error');
+          } catch {
+            appendSSELog('error', 'Connection error');
+          }
+        });
+
+        sseConnection.onerror = () => {
+          appendSSELog('error', 'SSE connection lost');
+          sseConnection.close();
+          document.getElementById('startExperimentBtn').innerHTML = 'Start Experiment';
+          document.getElementById('startExperimentBtn').disabled = false;
+        };
+      }
+
+      function appendSSELog(type, message) {
+        const logEl = document.getElementById('sseLog');
+        const timestamp = new Date().toLocaleTimeString();
+        logEl.innerHTML += `<div class="event-${type}">[${timestamp}] ${message}</div>`;
+        logEl.scrollTop = logEl.scrollHeight;
+      }
+
+      // ====================================================================
+      // Receipts Drawer (updated to use API data)
+      // ====================================================================
+      const drawerEl = document.getElementById("receiptsDrawer");
+      const receiptsMeta = document.getElementById("receiptsMeta");
+      const receiptsBadges = document.getElementById("receiptsBadges");
+      const claimsList = document.getElementById("claimsList");
+      const evidencePanel = document.getElementById("evidencePanel");
+      const evidenceCount = document.getElementById("evidenceCount");
+
+      function badge(html, cls = "text-bg-light border") {
+        return `<span class="badge rounded-pill ${cls}">${html}</span>`;
+      }
+
+      function renderEvidence(receipts) {
+        if (!receipts || receipts.length === 0) {
+          evidenceCount.textContent = "0 receipts";
+          evidencePanel.innerHTML = `
+            <div class="mb-2"><span class="stamp">VIBE, NOT FACT</span></div>
+            <div class="stamp-sub">No supporting journal excerpt found for this claim.</div>
+          `;
+          return;
+        }
+
+        evidenceCount.textContent = `${receipts.length} receipt${receipts.length === 1 ? "" : "s"}`;
+        evidencePanel.innerHTML = receipts.map(r => `
+          <div class="receipt-card">
+            <div class="small fw-bold">${r.source}</div>
+            <div class="mt-1">${r.snippet}</div>
+            <div class="receipt-meta">
+              <span>Date: ${new Date(r.date).toLocaleDateString()}</span>
+              <span>Entry ${r.entryId}</span>
+              <span>Confidence: ${(r.confidence * 100).toFixed(0)}%</span>
+            </div>
+          </div>
+        `).join("");
+      }
+
+      function renderClaims(claims) {
+        claimsList.innerHTML = claims.map((c, idx) => {
+          const supported = c.isSupported && c.receipts && c.receipts.length > 0;
+          const icon = supported ? "Supported" : "Warning";
+          const sub = supported ? `${c.receipts.length} receipt(s)` : "No receipts";
+          return `
+            <button type="button"
+                    class="list-group-item list-group-item-action claim-item"
+                    data-claimid="${c.id}"
+                    data-index="${idx}">
+              <div class="d-flex justify-content-between align-items-start">
+                <div class="me-2">
+                  <div class="fw-bold">${icon} ${c.claim}</div>
+                  <div class="small text-muted">${sub}</div>
+                </div>
+                <span class="badge rounded-pill ${supported ? "text-bg-success" : "text-bg-danger"}">
+                  ${supported ? "SUPPORTED" : "UNVERIFIED"}
+                </span>
+              </div>
+            </button>
+          `;
+        }).join("");
+
+        const first = claimsList.querySelector(".claim-item");
+        if (first) first.click();
+      }
+
+      claimsList.addEventListener("click", (e) => {
+        const btn = e.target.closest(".claim-item");
+        if (!btn) return;
+
+        claimsList.querySelectorAll(".claim-item").forEach(x => x.classList.remove("active"));
+        btn.classList.add("active");
+
+        const idx = Number(btn.dataset.index);
+        const activeClaims = drawerEl._activeClaims || [];
+        renderEvidence(activeClaims[idx]?.receipts || []);
+      });
+
+      drawerEl.addEventListener("show.bs.offcanvas", (event) => {
+        const trigger = event.relatedTarget;
+        const persona = trigger?.getAttribute("data-persona") || "goggins";
+
+        if (!currentRun) {
+          receiptsMeta.textContent = "No run loaded";
+          receiptsBadges.innerHTML = badge("Load a run first", "text-bg-warning");
+          claimsList.innerHTML = '<div class="text-muted p-3">Please select a run from the dropdown first.</div>';
+          return;
+        }
+
+        const claims = currentRun.personaClaims?.[persona] || [];
+
+        receiptsMeta.textContent = `Run: #${currentRun.athleteId} - Persona: ${persona}`;
+
+        const unsupportedCount = claims.filter(c => !c.isSupported || !c.receipts || c.receipts.length === 0).length;
+        receiptsBadges.innerHTML = [
+          badge(`Model: <strong>${currentRun.model}</strong>`, "text-bg-light border"),
+          badge(`Temp: <strong>${currentRun.temperature}</strong>`, "text-bg-light border"),
+          badge(`Prompt: <strong>${currentRun.promptVersion || 'v1'}</strong>`, "text-bg-light border"),
+          badge(`Context: <strong>${currentRun.entries}</strong> - ${currentRun.order}`, "text-bg-light border"),
+          badge(`Tokens: <strong>${currentRun.tokens.toLocaleString()}</strong>`, "text-bg-dark"),
+          badge(`Est: <strong>$${currentRun.estCost.toFixed(5)}</strong>`, "text-bg-success"),
+          badge(`Unsupported: <strong>${unsupportedCount}</strong>`, unsupportedCount ? "text-bg-warning text-dark" : "text-bg-info text-dark")
+        ].join("");
+
+        drawerEl._activeClaims = claims;
+
+        evidenceCount.textContent = "0 receipts";
+        evidencePanel.innerHTML = `<div class="text-muted small">Select a claim to view receipts.</div>`;
+        renderClaims(claims);
+      });
+
+      // ====================================================================
+      // Compare Providers - Batch Runner
+      // ====================================================================
+      const providerModels = {
+        openai: 'gpt-4o-mini',
+        anthropic: 'claude-3-haiku-20240307',
+        google: 'gemini-1.5-flash',
+        deepseek: 'deepseek-chat',
+        ollama: 'llama3.2'
+      };
+
+      // Store comparison results
+      let comparisonResults = {
+        openai: { start: null, middle: null, end: null, tokens: 0, cost: 0 },
+        anthropic: { start: null, middle: null, end: null, tokens: 0, cost: 0 },
+        google: { start: null, middle: null, end: null, tokens: 0, cost: 0 },
+        deepseek: { start: null, middle: null, end: null, tokens: 0, cost: 0 },
+        ollama: { start: null, middle: null, end: null, tokens: 0, cost: 0 }
+      };
+
+      let batchRunning = false;
+      let batchAbortController = null;
+      let currentBatchId = null; // Tracks current batch for report download
+      let currentReportRunIds = []; // Tracks individual run IDs for report download
+
+      function getSelectedProviders() {
+        const providers = [];
+        if (document.getElementById('providerOpenAI').checked) providers.push('openai');
+        if (document.getElementById('providerAnthropic').checked) providers.push('anthropic');
+        if (document.getElementById('providerGoogle').checked) providers.push('google');
+        if (document.getElementById('providerDeepSeek').checked) providers.push('deepseek');
+        if (document.getElementById('providerOllama').checked) providers.push('ollama');
+        return providers;
+      }
+
+      function updateComparisonCell(provider, position, found, percentage = null) {
+        const cell = document.getElementById(`cell-${provider}-${position}`);
+        if (!cell) return;
+
+        cell.className = 'comparison-cell';
+        const pct = percentage !== null ? percentage : (found ? 100 : 0);
+
+        if (found) {
+          cell.innerHTML = `
+            <span class="result-icon" style="color: #22c55e;">&#x2705;</span>
+            <span class="result-pct">${pct}% retrieval</span>
+          `;
+        } else {
+          cell.innerHTML = `
+            <span class="result-icon" style="color: #ef4444;">&#x274C;</span>
+            <span class="result-pct">${pct}% retrieval</span>
+          `;
+        }
+      }
+
+      function setCellRunning(provider, position) {
+        const cell = document.getElementById(`cell-${provider}-${position}`);
+        if (cell) {
+          cell.className = 'comparison-cell running';
+          cell.innerHTML = '';
+        }
+      }
+
+      function setCellPending(provider, position) {
+        const cell = document.getElementById(`cell-${provider}-${position}`);
+        if (cell) {
+          cell.className = 'comparison-cell pending';
+          cell.innerHTML = '';
+        }
+      }
+
+      function updateCostBars() {
+        const providers = ['openai', 'anthropic', 'google', 'deepseek', 'ollama'];
+
+        // Find max values for scaling
+        let maxTokens = 0;
+        let maxCost = 0;
+        providers.forEach(p => {
+          if (comparisonResults[p].tokens > maxTokens) maxTokens = comparisonResults[p].tokens;
+          if (comparisonResults[p].cost > maxCost) maxCost = comparisonResults[p].cost;
+        });
+
+        // Update bars
+        providers.forEach(p => {
+          const tokens = comparisonResults[p].tokens;
+          const cost = comparisonResults[p].cost;
+
+          // Token bar
+          document.getElementById(`tokens-${p}`).textContent = tokens > 0 ? `${tokens.toLocaleString()} tokens` : '-- tokens';
+          const tokenBarPct = maxTokens > 0 ? (tokens / maxTokens) * 100 : 0;
+          document.getElementById(`tokenbar-${p}`).style.width = `${tokenBarPct}%`;
+
+          // Cost bar
+          if (p === 'ollama') {
+            document.getElementById(`cost-${p}`).textContent = '$0.00 (free)';
+          } else {
+            document.getElementById(`cost-${p}`).textContent = cost > 0 ? `$${cost.toFixed(5)}` : '$--';
+          }
+          const costBarPct = maxCost > 0 ? (cost / maxCost) * 100 : 0;
+          document.getElementById(`costbar-${p}`).style.width = `${costBarPct}%`;
+        });
+      }
+
+      function updateBatchProgress(current, total, message) {
+        const progressContainer = document.getElementById('batchProgress');
+        const progressFill = document.getElementById('batchProgressFill');
+        const progressText = document.getElementById('batchProgressText');
+
+        progressContainer.style.display = 'block';
+        const pct = (current / total) * 100;
+        progressFill.style.width = `${pct}%`;
+        progressText.textContent = message;
+      }
+
+      function hideBatchProgress() {
+        document.getElementById('batchProgress').style.display = 'none';
+      }
+
+      async function runBatchComparison() {
+        if (batchRunning) return;
+
+        const providers = getSelectedProviders();
+        if (providers.length === 0) {
+          alert('Please select at least one provider to test.');
+          return;
+        }
+
+        const athleteId = parseInt(document.getElementById('batchAthleteId').value);
+        const needleFact = document.getElementById('batchNeedleFact').value;
+        const temperature = parseFloat(document.getElementById('batchTemp').value);
+        const maxEntries = parseInt(document.getElementById('batchMaxEntries').value);
+
+        if (!needleFact.trim()) {
+          alert('Please enter a needle fact to test.');
+          return;
+        }
+
+        batchRunning = true;
+        batchAbortController = new AbortController();
+        currentReportRunIds = []; // Reset run IDs for new batch
+        currentBatchId = null;
+
+        const btn = document.getElementById('runBatchBtn');
+        btn.innerHTML = '<span class="loading-spinner"></span> Running...';
+        btn.disabled = true;
+
+        // Disable download button while running
+        const downloadBtn = document.getElementById('downloadReportBtn');
+        downloadBtn.disabled = true;
+        downloadBtn.title = 'Run a batch experiment first';
+
+        // Reset results for selected providers
+        providers.forEach(p => {
+          comparisonResults[p] = { start: null, middle: null, end: null, tokens: 0, cost: 0 };
+          setCellPending(p, 'start');
+          setCellPending(p, 'middle');
+          setCellPending(p, 'end');
+        });
+
+        const positions = ['start', 'middle', 'end'];
+        const totalTests = providers.length * positions.length;
+        let completedTests = 0;
+
+        try {
+          for (const provider of providers) {
+            for (const position of positions) {
+              if (batchAbortController.signal.aborted) break;
+
+              setCellRunning(provider, position);
+              updateBatchProgress(completedTests, totalTests, `Testing ${provider} at ${position} position...`);
+
+              try {
+                // Run experiment via API
+                const request = {
+                  athleteId,
+                  experimentType: 'position',
+                  provider,
+                  model: providerModels[provider],
+                  persona: 'lasso',
+                  temperature,
+                  maxEntries,
+                  entryOrder: 'chrono',
+                  needleFact,
+                  positionToTest: position // If the API supports testing specific position
+                };
+
+                const response = await apiFetch('/api/experiments/run', {
+                  method: 'POST',
+                  body: JSON.stringify(request),
+                  signal: batchAbortController.signal
+                });
+
+                // Track run ID for report download
+                if (response.runId && !currentReportRunIds.includes(response.runId)) {
+                  currentReportRunIds.push(response.runId);
+                }
+
+                // Wait for completion and get results
+                const runDetails = await waitForRunCompletion(response.runId);
+
+                if (runDetails && runDetails.positionResults) {
+                  const posResult = runDetails.positionResults[position];
+                  const found = posResult?.found ?? false;
+                  comparisonResults[provider][position] = found;
+                  comparisonResults[provider].tokens += runDetails.tokens || 0;
+                  comparisonResults[provider].cost += runDetails.estCost || 0;
+                  updateComparisonCell(provider, position, found);
+                } else {
+                  // Mark as completed but unknown
+                  comparisonResults[provider][position] = false;
+                  updateComparisonCell(provider, position, false);
+                }
+              } catch (err) {
+                console.error(`Error testing ${provider} at ${position}:`, err);
+                comparisonResults[provider][position] = null;
+                setCellPending(provider, position);
+              }
+
+              completedTests++;
+              updateCostBars();
+            }
+          }
+
+          updateBatchProgress(totalTests, totalTests, 'Batch comparison complete!');
+          setTimeout(hideBatchProgress, 2000);
+
+          // Enable download button if we have run IDs
+          if (currentReportRunIds.length > 0) {
+            downloadBtn.disabled = false;
+            downloadBtn.title = `Download report for ${currentReportRunIds.length} experiment runs`;
+          }
+        } catch (err) {
+          console.error('Batch comparison error:', err);
+          alert(`Batch comparison failed: ${err.message}`);
+        } finally {
+          batchRunning = false;
+          batchAbortController = null;
+          btn.innerHTML = 'Run Batch Comparison';
+          btn.disabled = false;
+        }
+      }
+
+      async function waitForRunCompletion(runId, maxAttempts = 60) {
+        for (let i = 0; i < maxAttempts; i++) {
+          try {
+            const run = await apiFetch(`/api/experiments/runs/${runId}`);
+            if (run.status === 'completed' || run.status === 'failed') {
+              return run;
+            }
+          } catch (err) {
+            console.error('Error polling run status:', err);
+          }
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+        return null;
+      }
+
+      function clearComparisonResults() {
+        const providers = ['openai', 'anthropic', 'google', 'deepseek', 'ollama'];
+        const positions = ['start', 'middle', 'end'];
+
+        providers.forEach(p => {
+          comparisonResults[p] = { start: null, middle: null, end: null, tokens: 0, cost: 0 };
+          positions.forEach(pos => setCellPending(p, pos));
+        });
+
+        updateCostBars();
+      }
+
+      function exportComparisonToCsv() {
+        const providers = ['openai', 'anthropic', 'google', 'deepseek', 'ollama'];
+        const positions = ['start', 'middle', 'end'];
+
+        // Build CSV content
+        let csv = 'Position,OpenAI,Anthropic,Google,DeepSeek,Ollama\n';
+
+        positions.forEach(pos => {
+          const row = [pos.charAt(0).toUpperCase() + pos.slice(1)];
+          providers.forEach(p => {
+            const result = comparisonResults[p][pos];
+            if (result === null) {
+              row.push('N/A');
+            } else {
+              row.push(result ? 'FOUND (100%)' : 'MISSED (0%)');
+            }
+          });
+          csv += row.join(',') + '\n';
+        });
+
+        csv += '\nMetrics\n';
+        csv += 'Provider,Tokens,Cost\n';
+        providers.forEach(p => {
+          const tokens = comparisonResults[p].tokens;
+          const cost = p === 'ollama' ? 0 : comparisonResults[p].cost;
+          csv += `${p},${tokens},$${cost.toFixed(5)}\n`;
+        });
+
+        // Add metadata
+        csv += '\nExperiment Details\n';
+        csv += `Athlete ID,${document.getElementById('batchAthleteId').value}\n`;
+        csv += `Needle Fact,"${document.getElementById('batchNeedleFact').value}"\n`;
+        csv += `Temperature,${document.getElementById('batchTemp').value}\n`;
+        csv += `Max Entries,${document.getElementById('batchMaxEntries').value}\n`;
+        csv += `Export Date,${new Date().toISOString()}\n`;
+
+        // Download file
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `provider-comparison-${new Date().toISOString().split('T')[0]}.csv`;
+        link.click();
+        URL.revokeObjectURL(link.href);
+      }
+
+      async function downloadBatchReport() {
+        const btn = document.getElementById('downloadReportBtn');
+
+        // Check if we have run IDs or a batch ID
+        if (currentReportRunIds.length === 0 && !currentBatchId) {
+          alert('No experiment results available. Run a batch experiment first.');
+          return;
+        }
+
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<span class="loading-spinner"></span> Generating...';
+        btn.disabled = true;
+
+        try {
+          let reportUrl;
+          if (currentBatchId) {
+            // Use batch ID endpoint
+            reportUrl = `/api/experiments/report/${currentBatchId}?format=html`;
+          } else {
+            // Use run IDs endpoint
+            reportUrl = `/api/experiments/report?runIds=${currentReportRunIds.join(',')}&format=html`;
+          }
+
+          const headers = {
+            'Content-Type': 'application/json'
+          };
+          if (config.jwtToken) {
+            headers['Authorization'] = `Bearer ${config.jwtToken}`;
+          }
+
+          const response = await fetch(`${config.apiBaseUrl}${reportUrl}`, { headers });
+
+          if (!response.ok) {
+            const error = await response.json().catch(() => ({ error: 'Failed to generate report' }));
+            throw new Error(error.error || `HTTP ${response.status}`);
+          }
+
+          const html = await response.text();
+
+          // Create blob and download
+          const blob = new Blob([html], { type: 'text/html;charset=utf-8;' });
+          const link = document.createElement('a');
+          link.href = URL.createObjectURL(blob);
+          link.download = `experiment-report-${new Date().toISOString().split('T')[0]}.html`;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          URL.revokeObjectURL(link.href);
+
+        } catch (err) {
+          console.error('Report download error:', err);
+          alert(`Failed to download report: ${err.message}`);
+        } finally {
+          btn.innerHTML = originalText;
+          btn.disabled = false;
+        }
+      }
+
+      function showDemoComparisonData() {
+        // Demo data to show the UI working without API
+        comparisonResults = {
+          openai: { start: true, middle: false, end: true, tokens: 5420, cost: 0.00115 },
+          anthropic: { start: true, middle: true, end: true, tokens: 5890, cost: 0.00147 },
+          google: { start: true, middle: false, end: true, tokens: 5150, cost: 0.00026 },
+          deepseek: { start: true, middle: false, end: true, tokens: 5670, cost: 0.00079 },
+          ollama: { start: true, middle: false, end: false, tokens: 6200, cost: 0 }
+        };
+
+        const providers = ['openai', 'anthropic', 'google', 'deepseek', 'ollama'];
+        const positions = ['start', 'middle', 'end'];
+
+        providers.forEach(p => {
+          positions.forEach(pos => {
+            const found = comparisonResults[p][pos];
+            if (found !== null) {
+              updateComparisonCell(p, pos, found);
+            }
+          });
+        });
+
+        updateCostBars();
+      }
+
+      // ====================================================================
+      // Event Listeners
+      // ====================================================================
+      document.getElementById('testConnectionBtn').addEventListener('click', testConnection);
+      document.getElementById('loadRunsBtn').addEventListener('click', loadRuns);
+      document.getElementById('useDemoDataBtn').addEventListener('click', () => {
+        showDemoData();
+        showDemoComparisonData();
+        document.getElementById('dataSourceBadge').textContent = 'DEMO DATA';
+        document.getElementById('dataSourceBadge').classList.remove('text-bg-success');
+        document.getElementById('dataSourceBadge').classList.add('text-bg-secondary');
+        document.getElementById('footerDataBadge').textContent = 'DEMO DATA';
+        document.getElementById('footerDataBadge').classList.remove('text-bg-success');
+        document.getElementById('footerDataBadge').classList.add('text-bg-secondary');
+        updateConnectionStatus('disconnected', 'Using demo data');
+      });
+      document.getElementById('runSelector').addEventListener('change', (e) => {
+        if (e.target.value) {
+          loadRunDetails(parseInt(e.target.value));
+        }
+      });
+      document.getElementById('startExperimentBtn').addEventListener('click', runExperiment);
+
+      // Show/hide needle fact input based on experiment type
+      document.getElementById('expType').addEventListener('change', (e) => {
+        const needleGroup = document.getElementById('needleFactGroup');
+        needleGroup.style.display = e.target.value === 'position' ? 'block' : 'none';
+      });
+
+      // Model suggestions based on provider
+      document.getElementById('expProvider').addEventListener('change', (e) => {
+        const modelInput = document.getElementById('expModel');
+        const suggestions = {
+          openai: 'gpt-4o-mini',
+          anthropic: 'claude-3-haiku-20240307',
+          google: 'gemini-1.5-flash',
+          azure: 'gpt-4o-mini',
+          deepseek: 'deepseek-chat',
+          ollama: 'llama3.2'
+        };
+        modelInput.value = suggestions[e.target.value] || 'gpt-4o-mini';
+      });
+
+      // Compare Providers event listeners
+      document.getElementById('runBatchBtn').addEventListener('click', runBatchComparison);
+      document.getElementById('clearComparisonBtn').addEventListener('click', clearComparisonResults);
+      document.getElementById('exportCsvBtn').addEventListener('click', exportComparisonToCsv);
+      document.getElementById('downloadReportBtn').addEventListener('click', downloadBatchReport);
+
+      // ====================================================================
+      // Initial Load - Show Demo Data
+      // ====================================================================
+      function showDemoData() {
+        // Set demo values for display
+        document.getElementById('personaModel').textContent = 'gpt-4o-mini';
+        document.getElementById('personaTemp').textContent = '0.3';
+        document.getElementById('personaPrompt').textContent = 'v12';
+        document.getElementById('personaContext').textContent = '7 entries - Chrono';
+        document.getElementById('personaTokens').textContent = '1,847';
+        document.getElementById('personaCost').textContent = '$0.00039';
+
+        document.getElementById('gogginsSummary').innerHTML = `
+<span class="quote">"Listen up."</span>
+
+I see you complaining about <span class="highlight-fact">shin splints</span> on Tuesday. You know what I see? An excuse waiting to happen.
+
+Three entries this week talking about "tired legs" and "not feeling it." You think every champion felt like training? Hell no.
+
+<strong>What I noticed:</strong>
+- You skipped Thursday's session - that's weakness creeping in
+- Your mental barriers are EXCUSES, not obstacles
+- You've got more in the tank. You're just scared to find it.
+
+<span class="quote">"Who's gonna carry the boats?"</span>
+        `;
+
+        document.getElementById('lassoSummary').innerHTML = `
+<span class="quote">"Hey there, champ."</span>
+
+First off, I want you to know - you showed up this week. That matters. Even on Tuesday when those <span class="highlight-fact">shin splints</span> were giving you trouble, you still logged how you were feeling. That's self-awareness, friend.
+
+<strong>What I'm proud of:</strong>
+- You recognized when your body needed rest
+- You're being honest about your mental barriers
+- You came back strong on Saturday
+
+<span class="quote">"I believe in you. Now go believe in yourself."</span>
+        `;
+
+        document.getElementById('gogginsTokens').textContent = '1,847 tokens';
+        document.getElementById('gogginsCost').textContent = '$0.00039';
+        document.getElementById('gogginsTime').textContent = '1.2s';
+        document.getElementById('lassoTokens').textContent = '1,923 tokens';
+        document.getElementById('lassoCost').textContent = '$0.00041';
+        document.getElementById('lassoTime').textContent = '1.4s';
+
+        // Position results
+        document.getElementById('needleFact').textContent = '"Shin splints on Tuesday"';
+        document.getElementById('startResult').innerHTML = 'FOUND<small class="fw-normal opacity-75">100% retrieval</small>';
+        document.getElementById('middleResult').innerHTML = 'MISSED<strong class="d-block text-white" style="font-size: 1.2rem;">0% retrieval</strong>';
+        document.getElementById('endResult').innerHTML = 'FOUND<small class="fw-normal opacity-75">100% retrieval</small>';
+
+        document.getElementById('positionModel').textContent = 'gpt-4o-mini';
+        document.getElementById('positionTemp').textContent = '0.3';
+        document.getElementById('positionTokens').textContent = '~5,500';
+        document.getElementById('positionCost').textContent = '$0.00117';
+
+        // Compression
+        document.getElementById('fullTokenBar').textContent = '2,340 tokens';
+        document.getElementById('fullCost').textContent = '$0.00050';
+        document.getElementById('fullResults').innerHTML = `
+          <strong class="text-success">Caught shin splints</strong><br>
+          <strong class="text-success">Noticed Thursday skip</strong><br>
+          <strong class="text-success">Identified recovery pattern</strong>
+        `;
+
+        document.getElementById('compressedTokenBar').textContent = '1,053 tokens';
+        document.getElementById('compressedCost').textContent = '$0.00022';
+        document.getElementById('compressedSavings').textContent = '-55% TOKENS';
+        document.getElementById('compressedResults').innerHTML = `
+          <strong class="text-success">Caught shin splints</strong><br>
+          <strong class="text-danger">Missed Thursday skip</strong><br>
+          <strong class="text-success">Identified recovery pattern</strong>
+        `;
+
+        document.getElementById('limitedTokenBar').textContent = '585 tokens';
+        document.getElementById('limitedCost').textContent = '$0.00013';
+        document.getElementById('limitedSavings').textContent = '-75% TOKENS';
+        document.getElementById('limitedResults').innerHTML = `
+          <strong class="text-danger">Missed shin splints (too old)</strong><br>
+          <strong class="text-danger">Missed Thursday skip</strong><br>
+          <strong class="text-success">Identified recovery pattern</strong>
+        `;
+
+        document.getElementById('compressionModel').textContent = 'gpt-4o-mini';
+        document.getElementById('compressionTokens').textContent = '3,978';
+        document.getElementById('compressionCost').textContent = '$0.00085';
+
+        // FinOps
+        document.getElementById('sessionCost').textContent = '$0.0047';
+        document.getElementById('sessionCalls').textContent = '12 API calls';
+        document.getElementById('avgCost').textContent = '$0.00039';
+        document.getElementById('avgModel').textContent = 'gpt-4o-mini';
+        document.getElementById('projectedMonthly').textContent = '$1.17';
+        document.getElementById('totalTokens').textContent = '18,420';
+        document.getElementById('finopsModel').textContent = 'gpt-4o-mini';
+        document.getElementById('finopsCalls').textContent = '12';
+        document.getElementById('finopsTotal').textContent = '$0.0047';
+
+        document.getElementById('costByPersona').innerHTML = `
+          <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+            <span>Fire Goggins Mode</span>
+            <span>
+              <span class="badge bg-dark">$0.0024</span>
+              <small class="text-muted ms-2">6 calls</small>
+            </span>
+          </div>
+          <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+            <span>Heart Lasso Mode</span>
+            <span>
+              <span class="badge bg-warning text-dark">$0.0023</span>
+              <small class="text-muted ms-2">6 calls</small>
+            </span>
+          </div>
+          <div class="mt-3 small text-muted">
+            <strong>Insight:</strong> Lasso produces slightly shorter responses, costing 4% less per call.
+          </div>
+        `;
+
+        // Set demo data for drawer
+        currentRun = {
+          model: "gpt-4o-mini",
+          temperature: 0.3,
+          promptVersion: "v12",
+          entries: 7,
+          order: "Chrono",
+          tokens: 1847,
+          estCost: 0.00039,
+          athleteId: 1,
+          personaClaims: {
+            goggins: [
+              {
+                id: 1,
+                claim: "You reported shin splints on Tuesday.",
+                isSupported: true,
+                receipts: [
+                  {
+                    entryId: 3,
+                    date: new Date(),
+                    snippet: 'Felt <mark>shin splints</mark> today. Tried to push through but had to back off.',
+                    source: "JournalEntry #3",
+                    confidence: 0.95
+                  }
+                ]
+              },
+              {
+                id: 2,
+                claim: "You skipped Thursday's session.",
+                isSupported: true,
+                receipts: [
+                  {
+                    entryId: 5,
+                    date: new Date(),
+                    snippet: 'Didn\'t train today. Mentally flat and told myself I "needed rest".',
+                    source: "JournalEntry #5",
+                    confidence: 0.92
+                  }
+                ]
+              },
+              {
+                id: 3,
+                claim: "Your mental barriers are excuses, not obstacles.",
+                isSupported: false,
+                receipts: []
+              }
+            ],
+            lasso: [
+              {
+                id: 4,
+                claim: "You showed up and logged how you felt, even with shin splints.",
+                isSupported: true,
+                receipts: [
+                  {
+                    entryId: 3,
+                    date: new Date(),
+                    snippet: 'Felt <mark>shin splints</mark> today. Logged it anyway because I\'m trying to notice patterns.',
+                    source: "JournalEntry #3",
+                    confidence: 0.88
+                  }
+                ]
+              },
+              {
+                id: 5,
+                claim: "You came back strong on Saturday.",
+                isSupported: true,
+                receipts: [
+                  {
+                    entryId: 7,
+                    date: new Date(),
+                    snippet: 'Good session today. Legs felt better, confidence returned by the end.',
+                    source: "JournalEntry #7",
+                    confidence: 0.91
+                  }
+                ]
+              }
+            ]
+          }
+        };
+      }
+
+      // Auto-load runs on page load (with fallback to demo data if API unavailable)
+      (async function initializePage() {
+        try {
+          // Try to connect and load runs
+          await loadRuns();
+          if (allRuns.length > 0) {
+            // Successfully loaded runs - update UI to show live data status
+            document.getElementById('dataSourceBadge').textContent = 'LIVE DATA';
+            document.getElementById('dataSourceBadge').classList.remove('text-bg-secondary');
+            document.getElementById('dataSourceBadge').classList.add('text-bg-success');
+            document.getElementById('footerDataBadge').textContent = 'LIVE DATA';
+            document.getElementById('footerDataBadge').classList.remove('text-bg-secondary');
+            document.getElementById('footerDataBadge').classList.add('text-bg-success');
+            updateConnectionStatus('connected', 'Connected');
+            // Optionally auto-load the most recent run
+            loadRunDetails(allRuns[0].id);
+            document.getElementById('runSelector').value = allRuns[0].id.toString();
+          } else {
+            // No runs in database - show demo data
+            showDemoData();
+            showDemoComparisonData();
+            updateConnectionStatus('connected', 'Connected (no runs yet)');
+          }
+        } catch (err) {
+          // API unavailable - show demo data
+          console.log('API not available, showing demo data:', err.message);
+          showDemoData();
+          showDemoComparisonData();
+        }
+      })();
+    </script>
+</body>
+</html>

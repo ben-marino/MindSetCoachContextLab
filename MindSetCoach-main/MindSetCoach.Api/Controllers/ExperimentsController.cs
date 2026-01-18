@@ -96,6 +96,7 @@ public class ExperimentsController : ControllerBase
     /// <param name="limit">Maximum number of results (default: 20)</param>
     /// <returns>List of experiment runs with summary stats</returns>
     [HttpGet("runs")]
+    [AllowAnonymous]
     [ProducesResponseType(typeof(List<ExperimentRunDto>), StatusCodes.Status200OK)]
     public async Task<ActionResult<List<ExperimentRunDto>>> GetRuns(
         [FromQuery] string? provider = null,
@@ -149,6 +150,7 @@ public class ExperimentsController : ControllerBase
     /// <param name="runId">The experiment run ID</param>
     /// <returns>Full run details formatted for the HTML viewer</returns>
     [HttpGet("runs/{runId}")]
+    [AllowAnonymous]
     [ProducesResponseType(typeof(ExperimentRunDetailDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<ExperimentRunDetailDto>> GetRun(int runId)
@@ -456,6 +458,7 @@ public class ExperimentsController : ControllerBase
     /// </summary>
     /// <returns>List of experiment presets</returns>
     [HttpGet("presets")]
+    [AllowAnonymous]
     [ProducesResponseType(typeof(List<ExperimentPresetDto>), StatusCodes.Status200OK)]
     public async Task<ActionResult<List<ExperimentPresetDto>>> GetPresets()
     {

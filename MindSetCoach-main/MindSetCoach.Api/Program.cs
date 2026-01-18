@@ -230,17 +230,14 @@ try
 
     app.UseCors("AllowAll");
 
+    // Serve static files (wwwroot/index.html as default)
+    app.UseDefaultFiles();
+    app.UseStaticFiles();
+
     app.UseAuthentication();
     app.UseAuthorization();
 
     app.MapControllers();
-
-    // Root endpoint
-    app.MapGet("/", () => Results.Ok(new {
-        message = "MindsetCoach API is running!",
-        swagger = "/swagger",
-        health = "/health"
-    }));
 
     // Health check endpoint
     app.MapGet("/health", () => Results.Ok(new { status = "healthy", timestamp = DateTime.UtcNow }))
