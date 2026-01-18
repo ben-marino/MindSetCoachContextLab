@@ -8,6 +8,7 @@ using MindSetCoach.Api.Services;
 using MindSetCoach.Api.Services.AI;
 using MindSetCoach.Api.Services.AI.Experiments;
 using MindSetCoach.Api.Configuration;
+using Microsoft.Extensions.Options;
 
 try
 {
@@ -127,6 +128,11 @@ try
 
     // Register Semantic Kernel and AI services
     builder.Services.AddSemanticKernelServices(builder.Configuration);
+
+    // Register experiment scheduler configuration and background service
+    builder.Services.Configure<ExperimentSchedulerOptions>(
+        builder.Configuration.GetSection(ExperimentSchedulerOptions.SectionName));
+    builder.Services.AddHostedService<ExperimentSchedulerService>();
 
     // Configure CORS based on environment
     builder.Services.AddCors(options =>
