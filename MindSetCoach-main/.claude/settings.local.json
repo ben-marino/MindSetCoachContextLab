@@ -70,7 +70,10 @@
       "Bash(wc:*)",
       "Bash(git -C /root/MindSetCoachContextLab/MindSetCoachContextLab/MindSetCoach-main log --oneline)",
       "Bash(pgrep:*)",
-      "Bash(dotnet sln add:*)"
+      "Bash(dotnet sln add:*)",
+      "Bash(echo:*)",
+      "Bash(xxd:*)",
+      "Bash(TOKEN=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6IjEiLCJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9lbWFpbGFkZHJlc3MiOiJjb2FjaEB0ZXN0LmNvbSIsImh0dHA6Ly9zY2hlbWFzLm1pY3Jvc29mdC5jb20vd3MvMjAwOC8wNi9pZGVudGl0eS9jbGFpbXMvcm9sZSI6IkNvYWNoIiwianRpIjoiNTYxYzU2YmItZTQxOC00ZjQ2LTg5MjAtODc2YmUxZWIzNWE2IiwiQ29hY2hJZCI6IjEiLCJleHAiOjE3Njg3Njk5MzcsImlzcyI6Ik1pbmRTZXRDb2FjaCIsImF1ZCI6Ik1pbmRTZXRDb2FjaFVzZXJzIn0.l4JibaRYAyWma-lFVzkw9UIsVTrKmnyCDO1Z2af1M7c\" curl -s http://localhost:5000/api/journal/athlete/1 -H \"Authorization: Bearer $TOKEN\")"
     ],
     "deny": [],
     "ask": []
