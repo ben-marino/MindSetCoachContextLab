@@ -20,6 +20,7 @@ public class ExperimentsController : ControllerBase
 {
     private readonly IExperimentRunnerService _experimentRunner;
     private readonly IBatchExperimentService _batchExperimentService;
+    private readonly IReportGeneratorService _reportGenerator;
     private readonly ContextExperimentLogger _experimentLogger;
     private readonly ExperimentsDbContext _dbContext;
     private readonly ILogger<ExperimentsController> _logger;
@@ -27,12 +28,14 @@ public class ExperimentsController : ControllerBase
     public ExperimentsController(
         IExperimentRunnerService experimentRunner,
         IBatchExperimentService batchExperimentService,
+        IReportGeneratorService reportGenerator,
         ContextExperimentLogger experimentLogger,
         ExperimentsDbContext dbContext,
         ILogger<ExperimentsController> logger)
     {
         _experimentRunner = experimentRunner;
         _batchExperimentService = batchExperimentService;
+        _reportGenerator = reportGenerator;
         _experimentLogger = experimentLogger;
         _dbContext = dbContext;
         _logger = logger;
@@ -527,6 +530,87 @@ public class ExperimentsController : ControllerBase
         _logger.LogInformation("Deleted experiment preset: {Id} - {Name}", id, preset.Name);
 
         return NoContent();
+    }
+
+    #endregion
+
+    #region Report Endpoints
+
+    /// <summary>
+    /// Generate a report for a batch experiment.
+    /// Returns HTML (self-contained) or JSON based on format parameter.
+    /// </summary>
+    /// <param name="batchId">The batch ID (GUID)</param>
+    /// <param name="format">Output format: 'html' (default) or 'json'</param>
+    /// <returns>HTML report or JSON data</returns>
+    [HttpGet("report/{batchId}")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetBatchReport(string batchId, [FromQuery] string format = "html")
+    {
+        _logger.LogInformation("Generating {Format} report for batch {BatchId}", format, batchId);
+
+        if (format.ToLower() == "json")
+        {
+            var jsonData = await _reportGenerator.GenerateJsonReportAsync(batchId);
+            if (jsonData == null)
+            {
+                return NotFound(new { error = $"Batch experiment {batchId} not found" });
+            }
+
+            return Ok(jsonData);
+        }
+
+        // Default to HTML
+        var htmlReport = await _reportGenerator.GenerateHtmlReportAsync(batchId);
+        return Content(htmlReport, "text/html");
+    }
+
+    /// <summary>
+    /// Generate a report for specific experiment runs.
+    /// Returns HTML (self-contained) or JSON based on format parameter.
+    /// </summary>
+    /// <param name="runIds">Comma-separated list of run IDs</param>
+    /// <param name="format">Output format: 'html' (default) or 'json'</param>
+    /// <returns>HTML report or JSON data</returns>
+    [HttpGet("report")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetRunsReport([FromQuery] string runIds, [FromQuery] string format = "html")
+    {
+        if (string.IsNullOrWhiteSpace(runIds))
+        {
+            return BadRequest(new { error = "runIds parameter is required" });
+        }
+
+        var runIdList = runIds.Split(',', StringSplitOptions.RemoveEmptyEntries)
+            .Select(id => int.TryParse(id.Trim(), out var parsed) ? parsed : (int?)null)
+            .Where(id => id.HasValue)
+            .Select(id => id!.Value)
+            .ToList();
+
+        if (!runIdList.Any())
+        {
+            return BadRequest(new { error = "No valid run IDs provided" });
+        }
+
+        _logger.LogInformation("Generating {Format} report for runs {RunIds}", format, string.Join(",", runIdList));
+
+        if (format.ToLower() == "json")
+        {
+            var jsonData = await _reportGenerator.GenerateJsonReportAsync(runIdList);
+            if (jsonData == null)
+            {
+                return NotFound(new { error = "No experiment runs found for the specified IDs" });
+            }
+
+            return Ok(jsonData);
+        }
+
+        // Default to HTML
+        var htmlReport = await _reportGenerator.GenerateHtmlReportAsync(runIdList);
+        return Content(htmlReport, "text/html");
     }
 
     #endregion

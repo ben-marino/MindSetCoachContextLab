@@ -67,7 +67,9 @@
       "Bash(set +H)",
       "Bash(TOKEN=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6IjEiLCJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9lbWFpbGFkZHJlc3MiOiJjb2FjaEB0ZXN0LmNvbSIsImh0dHA6Ly9zY2hlbWFzLm1pY3Jvc29mdC5jb20vd3MvMjAwOC8wNi9pZGVudGl0eS9jbGFpbXMvcm9sZSI6IkNvYWNoIiwianRpIjoiZDY2NjU1NTUtNWJiMC00NWU1LWJjMzAtNzg4MGEyNjNjMGE5IiwiQ29hY2hJZCI6IjEiLCJleHAiOjE3Njg1MTE3ODUsImlzcyI6Ik1pbmRTZXRDb2FjaCIsImF1ZCI6Ik1pbmRTZXRDb2FjaFVzZXJzIn0.PEUbhcEsibL4eP1qQofza8yMxsoJjw6pEGqUeI6mzTE\" curl -s http://localhost:5000/api/experiments/presets -H \"Authorization: Bearer $TOKEN\")",
       "Bash(TOKEN=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6IjEiLCJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9lbWFpbGFkZHJlc3MiOiJjb2FjaEB0ZXN0LmNvbSIsImh0dHA6Ly9zY2hlbWFzLm1pY3Jvc29mdC5jb20vd3MvMjAwOC8wNi9pZGVudGl0eS9jbGFpbXMvcm9sZSI6IkNvYWNoIiwianRpIjoiZDY2NjU1NTUtNWJiMC00NWU1LWJjMzAtNzg4MGEyNjNjMGE5IiwiQ29hY2hJZCI6IjEiLCJleHAiOjE3Njg1MTE3ODUsImlzcyI6Ik1pbmRTZXRDb2FjaCIsImF1ZCI6Ik1pbmRTZXRDb2FjaFVzZXJzIn0.PEUbhcEsibL4eP1qQofza8yMxsoJjw6pEGqUeI6mzTE\")",
-      "Bash(wc:*)"
+      "Bash(wc:*)",
+      "Bash(git -C /root/MindSetCoachContextLab/MindSetCoachContextLab/MindSetCoach-main log --oneline)",
+      "Bash(pgrep:*)"
     ],
     "deny": [],
     "ask": []

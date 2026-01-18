@@ -987,6 +987,9 @@
                         <button class="btn btn-export" id="exportCsvBtn">
                             Export to CSV
                         </button>
+                        <button class="btn btn-primary ms-2" id="downloadReportBtn" disabled title="Run a batch experiment first">
+                            Download Report
+                        </button>
                     </div>
                 </div>
 
@@ -2064,6 +2067,8 @@
 
       let batchRunning = false;
       let batchAbortController = null;
+      let currentBatchId = null; // Tracks current batch for report download
+      let currentReportRunIds = []; // Tracks individual run IDs for report download
 
       function getSelectedProviders() {
         const providers = [];
@@ -2179,10 +2184,17 @@
 
         batchRunning = true;
         batchAbortController = new AbortController();
+        currentReportRunIds = []; // Reset run IDs for new batch
+        currentBatchId = null;
 
         const btn = document.getElementById('runBatchBtn');
         btn.innerHTML = '<span class="loading-spinner"></span> Running...';
         btn.disabled = true;
+
+        // Disable download button while running
+        const downloadBtn = document.getElementById('downloadReportBtn');
+        downloadBtn.disabled = true;
+        downloadBtn.title = 'Run a batch experiment first';
 
         // Reset results for selected providers
         providers.forEach(p => {
@@ -2225,6 +2237,11 @@
                   signal: batchAbortController.signal
                 });
 
+                // Track run ID for report download
+                if (response.runId && !currentReportRunIds.includes(response.runId)) {
+                  currentReportRunIds.push(response.runId);
+                }
+
                 // Wait for completion and get results
                 const runDetails = await waitForRunCompletion(response.runId);
 
@@ -2253,6 +2270,12 @@
 
           updateBatchProgress(totalTests, totalTests, 'Batch comparison complete!');
           setTimeout(hideBatchProgress, 2000);
+
+          // Enable download button if we have run IDs
+          if (currentReportRunIds.length > 0) {
+            downloadBtn.disabled = false;
+            downloadBtn.title = `Download report for ${currentReportRunIds.length} experiment runs`;
+          }
         } catch (err) {
           console.error('Batch comparison error:', err);
           alert(`Batch comparison failed: ${err.message}`);
@@ -2336,6 +2359,64 @@
         URL.revokeObjectURL(link.href);
       }
 
+      async function downloadBatchReport() {
+        const btn = document.getElementById('downloadReportBtn');
+
+        // Check if we have run IDs or a batch ID
+        if (currentReportRunIds.length === 0 && !currentBatchId) {
+          alert('No experiment results available. Run a batch experiment first.');
+          return;
+        }
+
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<span class="loading-spinner"></span> Generating...';
+        btn.disabled = true;
+
+        try {
+          let reportUrl;
+          if (currentBatchId) {
+            // Use batch ID endpoint
+            reportUrl = `/api/experiments/report/${currentBatchId}?format=html`;
+          } else {
+            // Use run IDs endpoint
+            reportUrl = `/api/experiments/report?runIds=${currentReportRunIds.join(',')}&format=html`;
+          }
+
+          const headers = {
+            'Content-Type': 'application/json'
+          };
+          if (config.jwtToken) {
+            headers['Authorization'] = `Bearer ${config.jwtToken}`;
+          }
+
+          const response = await fetch(`${config.apiBaseUrl}${reportUrl}`, { headers });
+
+          if (!response.ok) {
+            const error = await response.json().catch(() => ({ error: 'Failed to generate report' }));
+            throw new Error(error.error || `HTTP ${response.status}`);
+          }
+
+          const html = await response.text();
+
+          // Create blob and download
+          const blob = new Blob([html], { type: 'text/html;charset=utf-8;' });
+          const link = document.createElement('a');
+          link.href = URL.createObjectURL(blob);
+          link.download = `experiment-report-${new Date().toISOString().split('T')[0]}.html`;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          URL.revokeObjectURL(link.href);
+
+        } catch (err) {
+          console.error('Report download error:', err);
+          alert(`Failed to download report: ${err.message}`);
+        } finally {
+          btn.innerHTML = originalText;
+          btn.disabled = false;
+        }
+      }
+
       function showDemoComparisonData() {
         // Demo data to show the UI working without API
         comparisonResults = {
@@ -2397,6 +2478,7 @@
       document.getElementById('runBatchBtn').addEventListener('click', runBatchComparison);
       document.getElementById('clearComparisonBtn').addEventListener('click', clearComparisonResults);
       document.getElementById('exportCsvBtn').addEventListener('click', exportComparisonToCsv);
+      document.getElementById('downloadReportBtn').addEventListener('click', downloadBatchReport);
 
       // ====================================================================
       // Initial Load - Show Demo Data

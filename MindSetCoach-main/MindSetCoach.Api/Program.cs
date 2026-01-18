@@ -113,6 +113,9 @@ try
     // Register BatchExperimentService as singleton (manages batch background tasks)
     builder.Services.AddSingleton<IBatchExperimentService, BatchExperimentService>();
 
+    // Register ReportGeneratorService as scoped (generates HTML/JSON reports from experiment results)
+    builder.Services.AddScoped<IReportGeneratorService, ReportGeneratorService>();
+
     // Register KernelFactory for creating provider-specific kernels
     builder.Services.AddSingleton<IKernelFactory, KernelFactory>();
 
