@@ -298,7 +298,9 @@ public class MockMentalCoachAIService : IMentalCoachAIService
     public async Task<WeeklySummaryResponse> GenerateWeeklySummaryAsync(
         int athleteId,
         string persona,
-        ContextOptions? options = null)
+        ContextOptions? options = null,
+        string? provider = null,
+        string? model = null)
     {
         _logger.LogWarning("Using MOCK AI service - configure API key for real responses");
 
@@ -354,7 +356,9 @@ public class MockMentalCoachAIService : IMentalCoachAIService
     public Task<PositionTestResult> RunPositionTestAsync(
         int athleteId,
         string needleFact,
-        string persona = "lasso")
+        string persona = "lasso",
+        string? provider = null,
+        string? model = null)
     {
         return Task.FromResult(new PositionTestResult
         {
@@ -369,7 +373,11 @@ public class MockMentalCoachAIService : IMentalCoachAIService
         });
     }
 
-    public Task<CompressionTestResult> RunCompressionTestAsync(int athleteId, string persona = "lasso")
+    public Task<CompressionTestResult> RunCompressionTestAsync(
+        int athleteId,
+        string persona = "lasso",
+        string? provider = null,
+        string? model = null)
     {
         return Task.FromResult(new CompressionTestResult
         {

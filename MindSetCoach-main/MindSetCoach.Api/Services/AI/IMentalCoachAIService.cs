@@ -12,7 +12,9 @@ public interface IMentalCoachAIService
     Task<WeeklySummaryResponse> GenerateWeeklySummaryAsync(
         int athleteId,
         string persona,
-        ContextOptions? options = null);
+        ContextOptions? options = null,
+        string? provider = null,
+        string? model = null);
 
     /// <summary>
     /// Analyze patterns across journal entries (anxiety trends, recurring barriers, etc.)
@@ -33,14 +35,18 @@ public interface IMentalCoachAIService
     Task<PositionTestResult> RunPositionTestAsync(
         int athleteId,
         string needleFact,
-        string persona = "lasso");
+        string persona = "lasso",
+        string? provider = null,
+        string? model = null);
 
     /// <summary>
     /// Compare output quality across different context configurations.
     /// </summary>
     Task<CompressionTestResult> RunCompressionTestAsync(
         int athleteId,
-        string persona = "lasso");
+        string persona = "lasso",
+        string? provider = null,
+        string? model = null);
 }
 
 #region Response DTOs

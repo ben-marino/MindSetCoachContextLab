@@ -27,6 +27,7 @@ public class ExperimentsDbContext : DbContext
             entity.HasIndex(e => e.Status);
             entity.HasIndex(e => e.StartedAt);
             entity.HasIndex(e => e.IsDeleted);
+            entity.HasIndex(e => e.BatchId);
 
             entity.Property(e => e.EstimatedCost)
                 .HasPrecision(18, 6);

@@ -80,6 +80,32 @@ public class ProviderModelPair
     public string Model { get; set; } = string.Empty;
 }
 
+/// <summary>
+/// Request body for starting a batch experiment across multiple providers.
+/// </summary>
+public class BatchExperimentRequest
+{
+    [Required]
+    public int AthleteId { get; set; }
+
+    [Required]
+    public string ExperimentType { get; set; } = "position"; // "position", "persona", "compression"
+
+    public string? NeedleFact { get; set; }
+
+    [Required]
+    [MinLength(1)]
+    public List<ProviderModelPair> Providers { get; set; } = new();
+
+    public double Temperature { get; set; } = 0.7;
+
+    public int? MaxEntries { get; set; }
+
+    public string Persona { get; set; } = "lasso";
+
+    public string EntryOrder { get; set; } = "reverse";
+}
+
 #endregion
 
 #region Response DTOs
@@ -114,6 +140,7 @@ public class ExperimentRunDto
     public int ClaimCount { get; set; }
     public int SupportedClaimCount { get; set; }
     public int PositionTestCount { get; set; }
+    public string? BatchId { get; set; }
 }
 
 /// <summary>
@@ -213,6 +240,96 @@ public class ExperimentPresetDto
     public bool IsDefault { get; set; }
 }
 
+/// <summary>
+/// Response when starting a batch experiment - returns immediately with batch ID and run IDs.
+/// </summary>
+public class BatchExperimentResponse
+{
+    public string BatchId { get; set; } = string.Empty;
+    public List<int> RunIds { get; set; } = new();
+    public string Status { get; set; } = "running";
+    public string Message { get; set; } = string.Empty;
+}
+
+/// <summary>
+/// Aggregated results for a batch experiment across multiple providers.
+/// </summary>
+public class BatchResultsDto
+{
+    public string BatchId { get; set; } = string.Empty;
+    public string ExperimentType { get; set; } = string.Empty;
+    public int AthleteId { get; set; }
+    public string Status { get; set; } = string.Empty; // "running", "completed", "partial", "failed"
+    public DateTime StartedAt { get; set; }
+    public DateTime? CompletedAt { get; set; }
+    public int TotalProviders { get; set; }
+    public int CompletedProviders { get; set; }
+    public List<ProviderResultDto> ProviderResults { get; set; } = new();
+    public BatchComparisonDto? Comparison { get; set; }
+}
+
+/// <summary>
+/// Results for a single provider in a batch experiment.
+/// </summary>
+public class ProviderResultDto
+{
+    public int RunId { get; set; }
+    public string Provider { get; set; } = string.Empty;
+    public string Model { get; set; } = string.Empty;
+    public string Status { get; set; } = string.Empty;
+    public int TokensUsed { get; set; }
+    public decimal EstimatedCost { get; set; }
+    public double? DurationSeconds { get; set; }
+    public PositionResultsDto? PositionResults { get; set; }
+    public Dictionary<string, List<ClaimDto>>? PersonaClaims { get; set; }
+    public string? ErrorMessage { get; set; }
+}
+
+/// <summary>
+/// Comparison metrics across providers in a batch experiment.
+/// </summary>
+public class BatchComparisonDto
+{
+    public PositionComparisonDto? PositionComparison { get; set; }
+    public CostComparisonDto CostComparison { get; set; } = new();
+}
+
+/// <summary>
+/// Position test comparison across providers.
+/// </summary>
+public class PositionComparisonDto
+{
+    public Dictionary<string, bool> StartFound { get; set; } = new();
+    public Dictionary<string, bool> MiddleFound { get; set; } = new();
+    public Dictionary<string, bool> EndFound { get; set; } = new();
+}
+
+/// <summary>
+/// Cost comparison across providers.
+/// </summary>
+public class CostComparisonDto
+{
+    public string CheapestProvider { get; set; } = string.Empty;
+    public string FastestProvider { get; set; } = string.Empty;
+    public Dictionary<string, decimal> CostByProvider { get; set; } = new();
+    public Dictionary<string, double> DurationByProvider { get; set; } = new();
+}
+
+/// <summary>
+/// SSE event for batch experiment progress.
+/// </summary>
+public class BatchProgressEvent
+{
+    public string Type { get; set; } = string.Empty; // "provider_started", "provider_complete", "provider_error", "batch_complete"
+    public string BatchId { get; set; } = string.Empty;
+    public string? Provider { get; set; }
+    public string? Model { get; set; }
+    public int? RunId { get; set; }
+    public string Message { get; set; } = string.Empty;
+    public object? Data { get; set; }
+    public DateTime Timestamp { get; set; } = DateTime.UtcNow;
+}
+
 #endregion
 
 #region Mapping Extensions
@@ -237,7 +354,8 @@ public static class ExperimentDtoMapper
             EstimatedCost = run.EstimatedCost,
             ClaimCount = run.Claims?.Count ?? 0,
             SupportedClaimCount = run.Claims?.Count(c => c.IsSupported) ?? 0,
-            PositionTestCount = run.PositionTests?.Count ?? 0
+            PositionTestCount = run.PositionTests?.Count ?? 0,
+            BatchId = run.BatchId
         };
     }
 

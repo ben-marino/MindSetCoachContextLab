@@ -19,17 +19,20 @@ namespace MindSetCoach.Api.Controllers;
 public class ExperimentsController : ControllerBase
 {
     private readonly IExperimentRunnerService _experimentRunner;
+    private readonly IBatchExperimentService _batchExperimentService;
     private readonly ContextExperimentLogger _experimentLogger;
     private readonly ExperimentsDbContext _dbContext;
     private readonly ILogger<ExperimentsController> _logger;
 
     public ExperimentsController(
         IExperimentRunnerService experimentRunner,
+        IBatchExperimentService batchExperimentService,
         ContextExperimentLogger experimentLogger,
         ExperimentsDbContext dbContext,
         ILogger<ExperimentsController> logger)
     {
         _experimentRunner = experimentRunner;
+        _batchExperimentService = batchExperimentService;
         _experimentLogger = experimentLogger;
         _dbContext = dbContext;
         _logger = logger;
@@ -282,6 +285,166 @@ public class ExperimentsController : ControllerBase
         var summary = await _experimentLogger.GetSummaryAsync();
         return Ok(summary);
     }
+
+    #region Batch Experiment Endpoints
+
+    /// <summary>
+    /// Start a batch experiment across multiple providers in parallel.
+    /// Returns immediately with batch ID and run IDs.
+    /// </summary>
+    /// <param name="request">Batch experiment configuration with providers list</param>
+    /// <returns>Batch ID, run IDs, and status</returns>
+    [HttpPost("batch")]
+    [ProducesResponseType(typeof(BatchExperimentResponse), StatusCodes.Status202Accepted)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult<BatchExperimentResponse>> RunBatchExperiment([FromBody] BatchExperimentRequest request)
+    {
+        // Validate experiment type
+        var validTypes = new[] { "position", "persona", "compression" };
+        if (!validTypes.Contains(request.ExperimentType.ToLower()))
+        {
+            return BadRequest(new { error = "ExperimentType must be 'position', 'persona', or 'compression'" });
+        }
+
+        if (request.Providers == null || !request.Providers.Any())
+        {
+            return BadRequest(new { error = "At least one provider must be specified" });
+        }
+
+        // Validate all providers have provider and model
+        foreach (var provider in request.Providers)
+        {
+            if (string.IsNullOrEmpty(provider.Provider) || string.IsNullOrEmpty(provider.Model))
+            {
+                return BadRequest(new { error = "Each provider must have both 'provider' and 'model' specified" });
+            }
+        }
+
+        try
+        {
+            var response = await _batchExperimentService.StartBatchAsync(request);
+
+            _logger.LogInformation(
+                "Batch experiment started: BatchId={BatchId}, Type={Type}, Athlete={AthleteId}, Providers={ProviderCount}",
+                response.BatchId, request.ExperimentType, request.AthleteId, request.Providers.Count);
+
+            return Accepted(response);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to start batch experiment for athlete {AthleteId}", request.AthleteId);
+            return StatusCode(500, new { error = "Failed to start batch experiment", details = ex.Message });
+        }
+    }
+
+    /// <summary>
+    /// Get aggregated results for a batch experiment.
+    /// </summary>
+    /// <param name="batchId">The batch ID (GUID)</param>
+    /// <returns>Aggregated comparison data across all providers</returns>
+    [HttpGet("batch/{batchId}")]
+    [ProducesResponseType(typeof(BatchResultsDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<BatchResultsDto>> GetBatchResults(string batchId)
+    {
+        var results = await _batchExperimentService.GetBatchResultsAsync(batchId);
+
+        if (results == null)
+        {
+            return NotFound(new { error = $"Batch experiment {batchId} not found" });
+        }
+
+        return Ok(results);
+    }
+
+    /// <summary>
+    /// Stream live progress updates for a batch experiment using Server-Sent Events.
+    /// </summary>
+    /// <param name="batchId">The batch ID (GUID)</param>
+    /// <returns>SSE stream of batch progress events</returns>
+    [HttpGet("batch/{batchId}/stream")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task StreamBatchProgress(string batchId)
+    {
+        Response.ContentType = "text/event-stream";
+        Response.Headers.Append("Cache-Control", "no-cache");
+        Response.Headers.Append("Connection", "keep-alive");
+
+        var channel = _batchExperimentService.GetBatchProgressChannel(batchId);
+
+        if (channel == null)
+        {
+            // Check if the batch exists and is complete
+            var results = await _batchExperimentService.GetBatchResultsAsync(batchId);
+            if (results == null)
+            {
+                await WriteSSEEvent("error", new { message = $"Batch experiment {batchId} not found" });
+                return;
+            }
+
+            if (results.Status == "completed")
+            {
+                await WriteSSEEvent("batch_complete", new { message = "Batch experiment already completed", batchId, data = results });
+                return;
+            }
+
+            if (results.Status == "failed")
+            {
+                await WriteSSEEvent("error", new { message = "Batch experiment failed" });
+                return;
+            }
+
+            // Batch is pending but not started yet
+            await WriteSSEEvent("info", new { message = "Batch experiment is pending" });
+            return;
+        }
+
+        try
+        {
+            await foreach (var progressEvent in channel.Reader.ReadAllAsync(HttpContext.RequestAborted))
+            {
+                await WriteSSEEvent(progressEvent.Type, new
+                {
+                    batchId = progressEvent.BatchId,
+                    provider = progressEvent.Provider,
+                    model = progressEvent.Model,
+                    runId = progressEvent.RunId,
+                    message = progressEvent.Message,
+                    data = progressEvent.Data,
+                    timestamp = progressEvent.Timestamp
+                });
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // Client disconnected
+            _logger.LogInformation("Client disconnected from SSE stream for batch {BatchId}", batchId);
+        }
+    }
+
+    /// <summary>
+    /// Get all experiment runs for a specific batch.
+    /// </summary>
+    /// <param name="batchId">The batch ID (GUID)</param>
+    /// <returns>List of experiment runs in the batch</returns>
+    [HttpGet("batch/{batchId}/runs")]
+    [ProducesResponseType(typeof(List<ExperimentRunDto>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<List<ExperimentRunDto>>> GetBatchRuns(string batchId)
+    {
+        var runs = await _dbContext.ExperimentRuns
+            .Include(r => r.Claims)
+            .Include(r => r.PositionTests)
+            .Where(r => r.BatchId == batchId && !r.IsDeleted)
+            .OrderBy(r => r.Id)
+            .ToListAsync();
+
+        var dtos = runs.Select(r => r.ToDto()).ToList();
+
+        return Ok(dtos);
+    }
+
+    #endregion
 
     #region Preset Endpoints
 

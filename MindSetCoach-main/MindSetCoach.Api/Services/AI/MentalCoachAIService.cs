@@ -10,21 +10,34 @@ namespace MindSetCoach.Api.Services.AI;
 /// </summary>
 public class MentalCoachAIService : IMentalCoachAIService
 {
-    private readonly Kernel _kernel;
+    private readonly Kernel _defaultKernel;
+    private readonly IKernelFactory _kernelFactory;
     private readonly IJournalService _journalService;
     private readonly ILogger<MentalCoachAIService> _logger;
     private readonly ContextExperimentLogger _experimentLogger;
 
     public MentalCoachAIService(
         Kernel kernel,
+        IKernelFactory kernelFactory,
         IJournalService journalService,
         ILogger<MentalCoachAIService> logger,
         ContextExperimentLogger experimentLogger)
     {
-        _kernel = kernel;
+        _defaultKernel = kernel;
+        _kernelFactory = kernelFactory;
         _journalService = journalService;
         _logger = logger;
         _experimentLogger = experimentLogger;
+    }
+
+    private Kernel GetKernel(string? provider, string? model)
+    {
+        if (string.IsNullOrEmpty(provider) || string.IsNullOrEmpty(model))
+        {
+            return _defaultKernel;
+        }
+
+        return _kernelFactory.CreateKernel(provider, model);
     }
 
     #region Weekly Summary
@@ -32,7 +45,9 @@ public class MentalCoachAIService : IMentalCoachAIService
     public async Task<WeeklySummaryResponse> GenerateWeeklySummaryAsync(
         int athleteId,
         string persona,
-        ContextOptions? options = null)
+        ContextOptions? options = null,
+        string? provider = null,
+        string? model = null)
     {
         options ??= new ContextOptions();
 
@@ -74,8 +89,11 @@ public class MentalCoachAIService : IMentalCoachAIService
 
         try
         {
+            // Get the appropriate kernel (default or provider-specific)
+            var kernel = GetKernel(provider, model);
+
             // Call the LLM
-            var result = await _kernel.InvokePromptAsync(
+            var result = await kernel.InvokePromptAsync(
                 userPrompt,
                 new KernelArguments
                 {
@@ -105,7 +123,8 @@ public class MentalCoachAIService : IMentalCoachAIService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to generate summary for athlete {AthleteId}", athleteId);
+            _logger.LogError(ex, "Failed to generate summary for athlete {AthleteId} with provider {Provider}/{Model}",
+                athleteId, provider ?? "default", model ?? "default");
             _experimentLogger.LogResult(new ResultLog
             {
                 AthleteId = athleteId,
@@ -143,7 +162,7 @@ public class MentalCoachAIService : IMentalCoachAIService
 
         var prompt = BuildPatternAnalysisPrompt(entries);
 
-        var result = await _kernel.InvokePromptAsync(prompt);
+        var result = await _defaultKernel.InvokePromptAsync(prompt);
 
         // Parse structured response (in production, use function calling for structured output)
         return ParsePatternResponse(result.ToString(), daysToAnalyze);
@@ -175,7 +194,7 @@ public class MentalCoachAIService : IMentalCoachAIService
             INDICATORS: [comma-separated list of concern indicators found]
             """;
 
-        var result = await _kernel.InvokePromptAsync(prompt);
+        var result = await _defaultKernel.InvokePromptAsync(prompt);
         return ParseFlagResponse(result.ToString());
     }
 
@@ -186,7 +205,9 @@ public class MentalCoachAIService : IMentalCoachAIService
     public async Task<PositionTestResult> RunPositionTestAsync(
         int athleteId,
         string needleFact,
-        string persona = "lasso")
+        string persona = "lasso",
+        string? provider = null,
+        string? model = null)
     {
         var allEntries = await _journalService.GetAthleteEntriesAsync(athleteId);
 
@@ -211,7 +232,9 @@ public class MentalCoachAIService : IMentalCoachAIService
                     MaxEntries = modifiedEntries.Count,
                     CompressEntries = false,
                     IncludeMetadata = true
-                });
+                },
+                provider,
+                model);
 
             // Check if the needle fact was retrieved
             var factRetrieved = summary.Summary.Contains(needleFact, StringComparison.OrdinalIgnoreCase) ||
@@ -268,7 +291,9 @@ public class MentalCoachAIService : IMentalCoachAIService
 
     public async Task<CompressionTestResult> RunCompressionTestAsync(
         int athleteId,
-        string persona = "lasso")
+        string persona = "lasso",
+        string? provider = null,
+        string? model = null)
     {
         var allEntries = await _journalService.GetAthleteEntriesAsync(athleteId);
 
@@ -279,7 +304,9 @@ public class MentalCoachAIService : IMentalCoachAIService
                 MaxEntries = null,
                 CompressEntries = false,
                 IncludeMetadata = true
-            });
+            },
+            provider,
+            model);
 
         // Test 2: Compressed context (all entries, pre-summarized)
         var compressedResult = await GenerateWeeklySummaryAsync(athleteId, persona,
@@ -288,7 +315,9 @@ public class MentalCoachAIService : IMentalCoachAIService
                 MaxEntries = null,
                 CompressEntries = true,
                 IncludeMetadata = false
-            });
+            },
+            provider,
+            model);
 
         // Test 3: Limited context (last 7 entries only)
         var limitedResult = await GenerateWeeklySummaryAsync(athleteId, persona,
@@ -297,7 +326,9 @@ public class MentalCoachAIService : IMentalCoachAIService
                 MaxEntries = 7,
                 CompressEntries = false,
                 IncludeMetadata = true
-            });
+            },
+            provider,
+            model);
 
         return new CompressionTestResult
         {

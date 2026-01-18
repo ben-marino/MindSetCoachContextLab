@@ -60,6 +60,12 @@ public class ExperimentRun
 
     public bool IsDeleted { get; set; } = false;
 
+    /// <summary>
+    /// Optional batch ID for grouping experiments run together across multiple providers.
+    /// </summary>
+    [MaxLength(36)]
+    public string? BatchId { get; set; }
+
     // Navigation properties
     public ICollection<ExperimentClaim> Claims { get; set; } = new List<ExperimentClaim>();
     public ICollection<PositionTest> PositionTests { get; set; } = new List<PositionTest>();

@@ -110,6 +110,12 @@ try
     // Register ExperimentRunnerService as singleton (manages background tasks)
     builder.Services.AddSingleton<IExperimentRunnerService, ExperimentRunnerService>();
 
+    // Register BatchExperimentService as singleton (manages batch background tasks)
+    builder.Services.AddSingleton<IBatchExperimentService, BatchExperimentService>();
+
+    // Register KernelFactory for creating provider-specific kernels
+    builder.Services.AddSingleton<IKernelFactory, KernelFactory>();
+
     // Register application services
     builder.Services.AddScoped<IAuthService, AuthService>();
     builder.Services.AddScoped<IJournalService, JournalService>();
