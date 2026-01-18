@@ -1,0 +1,30 @@
+# Standalone Dockerfile for MindSetCoach CLI
+# Build with: docker build -f Dockerfile.cli -t mindsetcoach-cli .
+# Run with: docker run -v $(pwd)/data:/app/data mindsetcoach-cli batch --athlete 1 --preset "Full Provider Sweep"
+
+# Build stage
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+WORKDIR /src
+
+# Copy csproj files and restore
+COPY MindSetCoach.Api/MindSetCoach.Api.csproj MindSetCoach.Api/
+COPY MindSetCoach.Cli/MindSetCoach.Cli.csproj MindSetCoach.Cli/
+RUN dotnet restore MindSetCoach.Cli/MindSetCoach.Cli.csproj
+
+# Copy everything else and build
+COPY . .
+WORKDIR /src/MindSetCoach.Cli
+RUN dotnet publish -c Release -o /app/publish --no-restore
+
+# Runtime stage - use SDK for development, aspnet for smaller image
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
+WORKDIR /app
+COPY --from=build /app/publish .
+
+# Create data directory for experiments database
+RUN mkdir -p /app/data
+
+# Set working directory for data
+WORKDIR /app
+
+ENTRYPOINT ["dotnet", "mindsetcoach.dll"]
