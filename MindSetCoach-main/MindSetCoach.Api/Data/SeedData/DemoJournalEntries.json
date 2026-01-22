@@ -1,0 +1,156 @@
+[
+  {
+    "daysAgo": 21,
+    "emotionalState": "Excited but nervous. Starting my marathon training block today. 16 weeks until race day.",
+    "sessionReflection": "Easy 8km shake-out run. Legs felt fresh, heart rate stayed low. Focused on form and breathing rhythm. Good starting point for the training block.",
+    "mentalBarriers": "Already feeling pressure about the race. Need to take it one week at a time and trust the process.",
+    "isFlagged": false
+  },
+  {
+    "daysAgo": 20,
+    "emotionalState": "Motivated. Ready to push myself in today's speed session.",
+    "sessionReflection": "Track workout: 6x800m at 5K pace with 90s recovery. Splits were 3:12, 3:10, 3:08, 3:11, 3:09, 3:06. Last rep felt strong! Total session including warm-up: 12km.",
+    "mentalBarriers": "Third rep was tough mentally - wanted to quit but pushed through. Visualization helped.",
+    "isFlagged": false
+  },
+  {
+    "daysAgo": 19,
+    "emotionalState": "Tired but satisfied. Recovery day mindset.",
+    "sessionReflection": "30 min easy jog followed by stretching and foam rolling. Listened to a podcast about elite marathon training - very inspiring.",
+    "mentalBarriers": "Had to fight the urge to run faster. Learning that recovery is training too.",
+    "isFlagged": false
+  },
+  {
+    "daysAgo": 18,
+    "emotionalState": "Strong and confident.",
+    "sessionReflection": "Tempo run: 3km warm-up, 8km at marathon pace (4:45/km), 2km cool-down. Hit every split perfectly. This is the pace I need to hold for 42km.",
+    "mentalBarriers": "Around km 6 of the tempo, doubt crept in. Used my mantra 'smooth and strong' to refocus.",
+    "isFlagged": false
+  },
+  {
+    "daysAgo": 17,
+    "emotionalState": "Peaceful. Enjoying the process.",
+    "sessionReflection": "Easy 10km through the park. Beautiful morning, ran by feel. Noticed my breathing is getting more efficient.",
+    "mentalBarriers": "None today. Sometimes the best runs are the ones with no agenda.",
+    "isFlagged": false
+  },
+  {
+    "daysAgo": 16,
+    "emotionalState": "Anxious about tomorrow's long run.",
+    "sessionReflection": "Rest day. Did some light yoga and worked on hip mobility. Prepped my nutrition and gear for tomorrow's 24km.",
+    "mentalBarriers": "Can't stop thinking about the long run. What if I bonk? Need to trust my fitness.",
+    "isFlagged": false
+  },
+  {
+    "daysAgo": 15,
+    "emotionalState": "Accomplished! Huge confidence boost.",
+    "sessionReflection": "Long run: 24km at easy pace. First 18km felt comfortable, last 6km required mental toughness. Took gels at 8km and 16km. Finished strong with a 4:35 final km.",
+    "mentalBarriers": "Hit a wall at 20km but remembered why I'm doing this. Dedicated that last 4km to my family who always supports me.",
+    "isFlagged": false
+  },
+  {
+    "daysAgo": 14,
+    "emotionalState": "Legs are sore but spirits are high.",
+    "sessionReflection": "Recovery swim: 30 min easy laps. Great for loosening up without impact. Also did 15 min of stretching.",
+    "mentalBarriers": "Impatience - I want to run but know I need to recover properly.",
+    "isFlagged": false
+  },
+  {
+    "daysAgo": 13,
+    "emotionalState": "Frustrated and worried. Woke up with pain in my shins.",
+    "sessionReflection": "Had to cut my run short today. Noticed shin splints on Tuesday morning during my warm-up jog. Only managed 3km before the pain became too uncomfortable. Iced immediately after and booked a physio appointment.",
+    "mentalBarriers": "Fear of injury derailing my training. Catastrophizing about missing the marathon. Need to stay calm and address this properly.",
+    "isFlagged": true
+  },
+  {
+    "daysAgo": 12,
+    "emotionalState": "Cautiously optimistic after physio visit.",
+    "sessionReflection": "No running today per physio advice. Did 45 min on the stationary bike and strength exercises for my calves and tibialis anterior. The physio said it's mild and caught early.",
+    "mentalBarriers": "Frustration at not being able to run. But I'm channeling that energy into recovery work.",
+    "isFlagged": false
+  },
+  {
+    "daysAgo": 11,
+    "emotionalState": "Patient but restless.",
+    "sessionReflection": "Pool running for 40 minutes. Weird sensation but good workout. Also did more calf strengthening. Shins feeling better already.",
+    "mentalBarriers": "FOMO seeing other runners outside. Reminding myself this is temporary.",
+    "isFlagged": false
+  },
+  {
+    "daysAgo": 10,
+    "emotionalState": "Relieved and grateful.",
+    "sessionReflection": "Test jog: 15 min very easy on grass. No pain! Kept heart rate super low. Followed with extensive stretching and foam rolling.",
+    "mentalBarriers": "Had to resist the urge to run longer. Smart training means knowing when to hold back.",
+    "isFlagged": false
+  },
+  {
+    "daysAgo": 9,
+    "emotionalState": "Back in action! Feeling like myself again.",
+    "sessionReflection": "Easy 6km run, all systems go. Wore compression sleeves as a precaution. Focused on landing softly and maintaining good cadence.",
+    "mentalBarriers": "Still some residual anxiety about the injury returning. Taking it day by day.",
+    "isFlagged": false
+  },
+  {
+    "daysAgo": 8,
+    "emotionalState": "Building momentum again.",
+    "sessionReflection": "Modified tempo: 2km warm-up, 5km at tempo pace, 2km cool-down. Felt controlled and comfortable. Shins held up perfectly.",
+    "mentalBarriers": "Mental battle between wanting to make up for lost time and being patient. Patience won.",
+    "isFlagged": false
+  },
+  {
+    "daysAgo": 7,
+    "emotionalState": "Confident. The setback made me mentally stronger.",
+    "sessionReflection": "Long run: 20km. Intentionally shorter than planned to be safe. Consistent 5:00/km pace throughout. Nutrition strategy worked well.",
+    "mentalBarriers": "Around km 15 I felt a phantom twinge in my shin (probably imagined). Stayed calm, checked my form, and it passed.",
+    "isFlagged": false
+  },
+  {
+    "daysAgo": 6,
+    "emotionalState": "Peaceful and content.",
+    "sessionReflection": "Active recovery: 30 min walk, yoga session focusing on hip openers, and meditation. Sleep has been great this week - averaging 8 hours.",
+    "mentalBarriers": "None. Learning to enjoy the recovery days as much as the hard sessions.",
+    "isFlagged": false
+  },
+  {
+    "daysAgo": 5,
+    "emotionalState": "Focused and determined.",
+    "sessionReflection": "Speed session: 5x1km at 10K pace with 2 min recovery. Splits: 3:55, 3:52, 3:50, 3:51, 3:48. Getting faster! Total with warm-up/cool-down: 14km.",
+    "mentalBarriers": "Rep 4 was a grind. Used box breathing between reps to stay centered.",
+    "isFlagged": false
+  },
+  {
+    "daysAgo": 4,
+    "emotionalState": "Grateful for my body's resilience.",
+    "sessionReflection": "Easy 8km with a friend. Great to have company - the conversation made the miles fly by. Discussed race strategy and pacing.",
+    "mentalBarriers": "Comparison thoughts crept in - my friend is faster than me. Redirected focus to my own journey.",
+    "isFlagged": false
+  },
+  {
+    "daysAgo": 3,
+    "emotionalState": "Slightly fatigued but pushing through.",
+    "sessionReflection": "Progressive run: Started at 5:30/km, finished last 3km at 4:30/km. Total 12km. This teaches my body to run fast on tired legs.",
+    "mentalBarriers": "Had to dig deep in the final fast kilometers. Visualized crossing the marathon finish line.",
+    "isFlagged": false
+  },
+  {
+    "daysAgo": 2,
+    "emotionalState": "Ready for the weekend long run.",
+    "sessionReflection": "Easy 6km shakeout plus drills and strides. Legs feel springy. Laid out all my gear for tomorrow's 26km.",
+    "mentalBarriers": "Pre-long-run anxiety is back but I recognize it now. It's just my body preparing for the challenge.",
+    "isFlagged": false
+  },
+  {
+    "daysAgo": 1,
+    "emotionalState": "BREAKTHROUGH! Strongest long run yet!",
+    "sessionReflection": "Long run: 26km with the last 6km at marathon pace. Executed the plan perfectly. Felt strong at the end - like I could have kept going. This is the fitness I've been building toward!",
+    "mentalBarriers": "Zero mental barriers today. Everything clicked. This is what happens when you trust the process and stay consistent despite setbacks.",
+    "isFlagged": false
+  },
+  {
+    "daysAgo": 0,
+    "emotionalState": "Proud and motivated. Looking ahead to the next training block.",
+    "sessionReflection": "Rest day. Light stretching and reflection. Wrote down my goals for the coming weeks. The shin splints scare taught me the importance of listening to my body.",
+    "mentalBarriers": "Some impatience to get back to training, but I know rest is when adaptation happens. Trusting the process.",
+    "isFlagged": false
+  }
+]

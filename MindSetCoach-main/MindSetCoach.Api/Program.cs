@@ -125,6 +125,7 @@ try
     builder.Services.AddScoped<IJournalService, JournalService>();
     builder.Services.AddScoped<ICoachService, CoachService>();
     builder.Services.AddScoped<IClaimExtractorService, ClaimExtractorService>();
+    builder.Services.AddScoped<IDataSeeder, DataSeeder>();
 
     // Register Semantic Kernel and AI services
     builder.Services.AddSemanticKernelServices(builder.Configuration);
@@ -212,6 +213,14 @@ try
         SeedDefaultPresets(experimentsDb);
     }
 
+    // Seed demo data in Development or when explicitly enabled
+    if (app.Environment.IsDevelopment() || Environment.GetEnvironmentVariable("SEED_DEMO_DATA") == "true")
+    {
+        using var scope = app.Services.CreateScope();
+        var seeder = scope.ServiceProvider.GetRequiredService<IDataSeeder>();
+        await seeder.SeedDemoDataAsync();
+    }
+
     // Configure the HTTP request pipeline
     if (app.Environment.IsDevelopment())
     {
@@ -251,7 +260,7 @@ try
        .WithOpenApi();
 
     Console.WriteLine("=== STARTING APPLICATION ===");
-    app.Run();
+    await app.RunAsync();
 }
 catch (Exception ex)
 {
