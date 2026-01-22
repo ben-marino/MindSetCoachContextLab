@@ -117,6 +117,9 @@ try
     // Register ReportGeneratorService as scoped (generates HTML/JSON reports from experiment results)
     builder.Services.AddScoped<IReportGeneratorService, ReportGeneratorService>();
 
+    // Register CarouselExporterService as scoped (generates LinkedIn carousel images from experiment results)
+    builder.Services.AddScoped<ICarouselExporterService, CarouselExporterService>();
+
     // Register KernelFactory for creating provider-specific kernels
     builder.Services.AddSingleton<IKernelFactory, KernelFactory>();
 

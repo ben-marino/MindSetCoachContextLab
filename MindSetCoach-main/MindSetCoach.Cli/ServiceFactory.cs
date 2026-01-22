@@ -81,6 +81,7 @@ public static class ServiceFactory
         services.AddSingleton<IExperimentRunnerService, ExperimentRunnerService>();
         services.AddSingleton<IBatchExperimentService, BatchExperimentService>();
         services.AddScoped<IReportGeneratorService, ReportGeneratorService>();
+        services.AddScoped<ICarouselExporterService, CarouselExporterService>();
         services.AddSingleton<IKernelFactory, KernelFactory>();
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IJournalService, JournalService>();

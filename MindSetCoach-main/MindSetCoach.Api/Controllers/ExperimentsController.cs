@@ -21,6 +21,7 @@ public class ExperimentsController : ControllerBase
     private readonly IExperimentRunnerService _experimentRunner;
     private readonly IBatchExperimentService _batchExperimentService;
     private readonly IReportGeneratorService _reportGenerator;
+    private readonly ICarouselExporterService _carouselExporter;
     private readonly ContextExperimentLogger _experimentLogger;
     private readonly ExperimentsDbContext _dbContext;
     private readonly ILogger<ExperimentsController> _logger;
@@ -29,6 +30,7 @@ public class ExperimentsController : ControllerBase
         IExperimentRunnerService experimentRunner,
         IBatchExperimentService batchExperimentService,
         IReportGeneratorService reportGenerator,
+        ICarouselExporterService carouselExporter,
         ContextExperimentLogger experimentLogger,
         ExperimentsDbContext dbContext,
         ILogger<ExperimentsController> logger)
@@ -36,6 +38,7 @@ public class ExperimentsController : ControllerBase
         _experimentRunner = experimentRunner;
         _batchExperimentService = batchExperimentService;
         _reportGenerator = reportGenerator;
+        _carouselExporter = carouselExporter;
         _experimentLogger = experimentLogger;
         _dbContext = dbContext;
         _logger = logger;
@@ -614,6 +617,61 @@ public class ExperimentsController : ControllerBase
         // Default to HTML
         var htmlReport = await _reportGenerator.GenerateHtmlReportAsync(runIdList);
         return Content(htmlReport, "text/html");
+    }
+
+    #endregion
+
+    #region Carousel Endpoints
+
+    /// <summary>
+    /// Generate LinkedIn carousel images for a batch experiment.
+    /// Returns a ZIP file containing PNG slides.
+    /// </summary>
+    /// <param name="batchId">The batch ID (GUID)</param>
+    /// <param name="type">Carousel type: position, persona, cost, or summary (default: position)</param>
+    /// <returns>ZIP file containing PNG carousel slides</returns>
+    [HttpGet("batch/{batchId}/carousel")]
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(FileContentResult), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetBatchCarousel(string batchId, [FromQuery] string type = "position")
+    {
+        _logger.LogInformation("Generating {Type} carousel for batch {BatchId}", type, batchId);
+
+        // Parse carousel type
+        if (!Enum.TryParse<CarouselType>(type, ignoreCase: true, out var carouselType))
+        {
+            return BadRequest(new { error = $"Invalid carousel type '{type}'. Valid types: position, persona, cost, summary" });
+        }
+
+        try
+        {
+            List<byte[]> slides = carouselType switch
+            {
+                CarouselType.Position => await _carouselExporter.GeneratePositionCarouselAsync(batchId),
+                CarouselType.Persona => await _carouselExporter.GeneratePersonaCarouselAsync(batchId),
+                CarouselType.Cost => await _carouselExporter.GenerateCostCarouselAsync(batchId),
+                CarouselType.Summary => await _carouselExporter.GeneratePositionCarouselAsync(batchId),
+                _ => new List<byte[]>()
+            };
+
+            if (!slides.Any())
+            {
+                return NotFound(new { error = $"No experiment runs found for batch {batchId} or no slides could be generated" });
+            }
+
+            // Create ZIP file
+            var zipBytes = slides.CreateCarouselZip($"{type}_{batchId[..Math.Min(8, batchId.Length)]}");
+
+            var fileName = $"carousel_{type}_{batchId[..Math.Min(8, batchId.Length)]}.zip";
+            return File(zipBytes, "application/zip", fileName);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error generating carousel for batch {BatchId}", batchId);
+            return StatusCode(500, new { error = "Failed to generate carousel", details = ex.Message });
+        }
     }
 
     #endregion
