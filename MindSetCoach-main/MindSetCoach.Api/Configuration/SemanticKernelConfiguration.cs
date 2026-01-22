@@ -327,6 +327,9 @@ public class MockMentalCoachAIService : IMentalCoachAIService
             Persona = persona,
             EntriesAnalyzed = entries.Count,
             TokensUsed = 0,
+            InputTokens = 0,
+            OutputTokens = 0,
+            EstimatedCost = 0,
             ContextOptionsUsed = options
         };
     }

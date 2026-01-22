@@ -266,6 +266,7 @@ public class BatchResultsDto
     public int CompletedProviders { get; set; }
     public List<ProviderResultDto> ProviderResults { get; set; } = new();
     public BatchComparisonDto? Comparison { get; set; }
+    public BatchCostSummaryDto? CostSummary { get; set; }
 }
 
 /// <summary>
@@ -313,6 +314,22 @@ public class CostComparisonDto
     public string FastestProvider { get; set; } = string.Empty;
     public Dictionary<string, decimal> CostByProvider { get; set; } = new();
     public Dictionary<string, double> DurationByProvider { get; set; } = new();
+}
+
+/// <summary>
+/// Summary of costs for a batch experiment.
+/// </summary>
+public class BatchCostSummaryDto
+{
+    public decimal TotalCost { get; set; }
+    public int TotalTokens { get; set; }
+    public decimal AverageCostPerProvider { get; set; }
+    public int AverageTokensPerProvider { get; set; }
+    public string Currency { get; set; } = "USD";
+    public string CheapestProvider { get; set; } = string.Empty;
+    public decimal CheapestProviderCost { get; set; }
+    public string MostExpensiveProvider { get; set; } = string.Empty;
+    public decimal MostExpensiveProviderCost { get; set; }
 }
 
 /// <summary>

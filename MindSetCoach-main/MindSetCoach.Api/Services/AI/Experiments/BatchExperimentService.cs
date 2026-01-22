@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using MindSetCoach.Api.Data;
 using MindSetCoach.Api.DTOs;
 using MindSetCoach.Api.Models.Experiments;
+using MindSetCoach.Api.Services.AI;
 
 namespace MindSetCoach.Api.Services.AI.Experiments;
 
@@ -38,6 +39,7 @@ public class BatchExperimentService : IBatchExperimentService
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly IExperimentRunnerService _experimentRunner;
     private readonly ILogger<BatchExperimentService> _logger;
+    private readonly ICostCalculatorService _costCalculator;
 
     // Track running batches and their progress channels
     private readonly ConcurrentDictionary<string, Channel<BatchProgressEvent>> _batchProgressChannels = new();
@@ -54,11 +56,13 @@ public class BatchExperimentService : IBatchExperimentService
     public BatchExperimentService(
         IServiceScopeFactory scopeFactory,
         IExperimentRunnerService experimentRunner,
-        ILogger<BatchExperimentService> logger)
+        ILogger<BatchExperimentService> logger,
+        ICostCalculatorService costCalculator)
     {
         _scopeFactory = scopeFactory;
         _experimentRunner = experimentRunner;
         _logger = logger;
+        _costCalculator = costCalculator;
     }
 
     public async Task<BatchExperimentResponse> StartBatchAsync(BatchExperimentRequest request, CancellationToken cancellationToken = default)
@@ -291,9 +295,33 @@ public class BatchExperimentService : IBatchExperimentService
         if (completedRuns.Any())
         {
             result.Comparison = BuildComparison(completedRuns);
+            result.CostSummary = BuildCostSummary(completedRuns);
         }
 
         return result;
+    }
+
+    private BatchCostSummaryDto BuildCostSummary(List<ExperimentRun> completedRuns)
+    {
+        var totalCost = completedRuns.Sum(r => r.EstimatedCost);
+        var totalTokens = completedRuns.Sum(r => r.TokensUsed);
+        var providerCount = completedRuns.Count;
+
+        var cheapestRun = completedRuns.OrderBy(r => r.EstimatedCost).FirstOrDefault();
+        var mostExpensiveRun = completedRuns.OrderByDescending(r => r.EstimatedCost).FirstOrDefault();
+
+        return new BatchCostSummaryDto
+        {
+            TotalCost = totalCost,
+            TotalTokens = totalTokens,
+            AverageCostPerProvider = providerCount > 0 ? totalCost / providerCount : 0,
+            AverageTokensPerProvider = providerCount > 0 ? totalTokens / providerCount : 0,
+            Currency = "USD",
+            CheapestProvider = cheapestRun != null ? $"{cheapestRun.Provider}/{cheapestRun.Model}" : string.Empty,
+            CheapestProviderCost = cheapestRun?.EstimatedCost ?? 0,
+            MostExpensiveProvider = mostExpensiveRun != null ? $"{mostExpensiveRun.Provider}/{mostExpensiveRun.Model}" : string.Empty,
+            MostExpensiveProviderCost = mostExpensiveRun?.EstimatedCost ?? 0
+        };
     }
 
     public bool IsBatchRunning(string batchId)
@@ -477,6 +505,10 @@ public class BatchExperimentService : IBatchExperimentService
                         provider.Provider,
                         provider.Model);
 
+                    var positionTotalTokens = 0;
+                    var positionTotalInputTokens = 0;
+                    var positionTotalOutputTokens = 0;
+
                     foreach (var outcome in positionResult.Results)
                     {
                         var position = outcome.Position.ToLower() switch
@@ -488,15 +520,48 @@ public class BatchExperimentService : IBatchExperimentService
                         };
 
                         await experimentLogger.LogPositionTestAsync(runId, position, needleFact, outcome.FactRetrieved, outcome.GeneratedSummary);
+
+                        // Estimate tokens for this position test
+                        var inputTokens = outcome.TotalEntries * 100; // ~100 tokens per entry estimate
+                        var outputTokens = outcome.GeneratedSummary.Length / 4;
+                        positionTotalInputTokens += inputTokens;
+                        positionTotalOutputTokens += outputTokens;
+                        positionTotalTokens += inputTokens + outputTokens;
+                    }
+
+                    // Update run with position test tokens and cost
+                    run = await dbContext.ExperimentRuns.FindAsync(new object[] { runId }, cancellationToken);
+                    if (run != null)
+                    {
+                        run.TokensUsed = positionTotalTokens;
+                        run.EstimatedCost = _costCalculator.CalculateCost(provider.Provider, provider.Model, positionTotalInputTokens, positionTotalOutputTokens);
+                        await dbContext.SaveChangesAsync(cancellationToken);
                     }
                     break;
 
                 case "compression":
-                    await aiService.RunCompressionTestAsync(
+                    var compressionResult = await aiService.RunCompressionTestAsync(
                         request.AthleteId,
                         request.Persona,
                         provider.Provider,
                         provider.Model);
+
+                    // Calculate total tokens and cost across all compression test variants
+                    var compressionTotalTokens = compressionResult.FullContext.EstimatedTokens +
+                                                compressionResult.CompressedContext.EstimatedTokens +
+                                                compressionResult.LimitedContext.EstimatedTokens;
+
+                    var compressionInputTokens = (int)(compressionTotalTokens * 0.6);
+                    var compressionOutputTokens = compressionTotalTokens - compressionInputTokens;
+
+                    // Update run with compression test tokens and cost
+                    run = await dbContext.ExperimentRuns.FindAsync(new object[] { runId }, cancellationToken);
+                    if (run != null)
+                    {
+                        run.TokensUsed = compressionTotalTokens;
+                        run.EstimatedCost = _costCalculator.CalculateCost(provider.Provider, provider.Model, compressionInputTokens, compressionOutputTokens);
+                        await dbContext.SaveChangesAsync(cancellationToken);
+                    }
                     break;
 
                 case "persona":
@@ -508,6 +573,11 @@ public class BatchExperimentService : IBatchExperimentService
                         .ToListAsync(cancellationToken);
 
                     var personas = new[] { "goggins", "lasso" };
+                    var totalTokens = 0;
+                    var totalInputTokens = 0;
+                    var totalOutputTokens = 0;
+                    var totalCost = 0m;
+
                     foreach (var persona in personas)
                     {
                         var options = new ContextOptions
@@ -522,6 +592,11 @@ public class BatchExperimentService : IBatchExperimentService
                             options,
                             provider.Provider,
                             provider.Model);
+
+                        totalTokens += summary.TokensUsed;
+                        totalInputTokens += summary.InputTokens;
+                        totalOutputTokens += summary.OutputTokens;
+                        totalCost += summary.EstimatedCost;
 
                         var claims = claimExtractor.ExtractAndVerifyClaims(summary.Summary, journalEntries);
 
@@ -541,16 +616,35 @@ public class BatchExperimentService : IBatchExperimentService
                             }
                         }
                     }
+
+                    // Update run with tokens and cost
+                    run = await dbContext.ExperimentRuns.FindAsync(new object[] { runId }, cancellationToken);
+                    if (run != null)
+                    {
+                        run.TokensUsed = totalTokens;
+                        run.EstimatedCost = totalCost > 0 ? totalCost : _costCalculator.CalculateCost(provider.Provider, provider.Model, totalInputTokens, totalOutputTokens);
+                        await dbContext.SaveChangesAsync(cancellationToken);
+                    }
                     break;
             }
 
-            // Mark as complete
+            // Mark as complete with cost calculation
             run = await dbContext.ExperimentRuns.FindAsync(new object[] { runId }, cancellationToken);
             if (run != null)
             {
                 run.Status = ExperimentStatus.Completed;
                 run.CompletedAt = DateTime.UtcNow;
                 run.EntriesUsed = entriesUsed;
+
+                // Calculate cost if not already set
+                if (run.EstimatedCost == 0 && run.TokensUsed > 0)
+                {
+                    // Estimate input/output split (roughly 60% input, 40% output)
+                    var inputTokens = (int)(run.TokensUsed * 0.6);
+                    var outputTokens = run.TokensUsed - inputTokens;
+                    run.EstimatedCost = _costCalculator.CalculateCost(provider.Provider, provider.Model, inputTokens, outputTokens);
+                }
+
                 await dbContext.SaveChangesAsync(cancellationToken);
             }
 
@@ -561,7 +655,8 @@ public class BatchExperimentService : IBatchExperimentService
                 Provider = provider.Provider,
                 Model = provider.Model,
                 RunId = runId,
-                Message = $"Completed {provider.Provider}/{provider.Model}"
+                Message = $"Completed {provider.Provider}/{provider.Model}",
+                Data = new { cost = run?.EstimatedCost ?? 0, tokens = run?.TokensUsed ?? 0 }
             }, cancellationToken);
         }
         catch (Exception ex)

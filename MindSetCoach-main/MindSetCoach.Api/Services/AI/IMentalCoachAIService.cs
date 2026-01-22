@@ -57,6 +57,9 @@ public class WeeklySummaryResponse
     public string Persona { get; set; } = string.Empty;
     public int EntriesAnalyzed { get; set; }
     public int TokensUsed { get; set; }
+    public int InputTokens { get; set; }
+    public int OutputTokens { get; set; }
+    public decimal EstimatedCost { get; set; }
     public DateTime GeneratedAt { get; set; } = DateTime.UtcNow;
     public ContextOptions? ContextOptionsUsed { get; set; }
 }

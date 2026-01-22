@@ -15,19 +15,27 @@ public class MentalCoachAIService : IMentalCoachAIService
     private readonly IJournalService _journalService;
     private readonly ILogger<MentalCoachAIService> _logger;
     private readonly ContextExperimentLogger _experimentLogger;
+    private readonly ICostCalculatorService _costCalculator;
+    private readonly string _defaultProvider;
+    private readonly string _defaultModel;
 
     public MentalCoachAIService(
         Kernel kernel,
         IKernelFactory kernelFactory,
         IJournalService journalService,
         ILogger<MentalCoachAIService> logger,
-        ContextExperimentLogger experimentLogger)
+        ContextExperimentLogger experimentLogger,
+        ICostCalculatorService costCalculator,
+        Configuration.AIProviderInfo providerInfo)
     {
         _defaultKernel = kernel;
         _kernelFactory = kernelFactory;
         _journalService = journalService;
         _logger = logger;
         _experimentLogger = experimentLogger;
+        _costCalculator = costCalculator;
+        _defaultProvider = providerInfo.Provider;
+        _defaultModel = providerInfo.ModelId;
     }
 
     private Kernel GetKernel(string? provider, string? model)
@@ -72,8 +80,8 @@ public class MentalCoachAIService : IMentalCoachAIService
         var systemPrompt = GetPersonaPrompt(persona);
         var userPrompt = BuildSummaryPrompt(contextEntries, options);
 
-        // Estimate tokens (rough: ~4 chars per token)
-        var estimatedTokens = (systemPrompt.Length + userPrompt.Length) / 4;
+        // Estimate input tokens (rough: ~4 chars per token)
+        var inputTokens = (systemPrompt.Length + userPrompt.Length) / 4;
 
         // Log for experiments
         _experimentLogger.LogContextSent(new ContextLog
@@ -81,7 +89,7 @@ public class MentalCoachAIService : IMentalCoachAIService
             AthleteId = athleteId,
             Persona = persona,
             EntryCount = contextEntries.Count,
-            TotalTokensEstimate = estimatedTokens,
+            TotalTokensEstimate = inputTokens,
             ContextOptions = options,
             Timestamp = DateTime.UtcNow,
             PromptLength = userPrompt.Length
@@ -102,6 +110,15 @@ public class MentalCoachAIService : IMentalCoachAIService
 
             var summary = result.ToString();
 
+            // Estimate output tokens (rough: ~4 chars per token)
+            var outputTokens = summary.Length / 4;
+            var totalTokens = inputTokens + outputTokens;
+
+            // Calculate cost using the actual provider and model
+            var actualProvider = provider ?? _defaultProvider;
+            var actualModel = model ?? _defaultModel;
+            var estimatedCost = _costCalculator.CalculateCost(actualProvider, actualModel, inputTokens, outputTokens);
+
             // Log result
             _experimentLogger.LogResult(new ResultLog
             {
@@ -117,7 +134,10 @@ public class MentalCoachAIService : IMentalCoachAIService
                 Summary = summary,
                 Persona = persona,
                 EntriesAnalyzed = contextEntries.Count,
-                TokensUsed = estimatedTokens,
+                TokensUsed = totalTokens,
+                InputTokens = inputTokens,
+                OutputTokens = outputTokens,
+                EstimatedCost = estimatedCost,
                 ContextOptionsUsed = options
             };
         }

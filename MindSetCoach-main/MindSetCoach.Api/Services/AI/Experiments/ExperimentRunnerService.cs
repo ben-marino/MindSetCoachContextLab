@@ -5,6 +5,7 @@ using MindSetCoach.Api.Configuration;
 using MindSetCoach.Api.Data;
 using MindSetCoach.Api.DTOs;
 using MindSetCoach.Api.Models.Experiments;
+using MindSetCoach.Api.Services.AI;
 
 namespace MindSetCoach.Api.Services.AI.Experiments;
 
@@ -35,6 +36,7 @@ public class ExperimentRunnerService : IExperimentRunnerService
     private readonly IServiceScopeFactory _scopeFactory;
     private readonly ILogger<ExperimentRunnerService> _logger;
     private readonly AIProviderInfo _providerInfo;
+    private readonly ICostCalculatorService _costCalculator;
 
     // Track running experiments and their progress channels
     private readonly ConcurrentDictionary<int, Channel<ExperimentProgressEvent>> _progressChannels = new();
@@ -43,11 +45,13 @@ public class ExperimentRunnerService : IExperimentRunnerService
     public ExperimentRunnerService(
         IServiceScopeFactory scopeFactory,
         ILogger<ExperimentRunnerService> logger,
-        AIProviderInfo providerInfo)
+        AIProviderInfo providerInfo,
+        ICostCalculatorService costCalculator)
     {
         _scopeFactory = scopeFactory;
         _logger = logger;
         _providerInfo = providerInfo;
+        _costCalculator = costCalculator;
     }
 
     public async Task<int> StartExperimentAsync(RunExperimentRequest request, CancellationToken cancellationToken = default)
@@ -166,11 +170,15 @@ public class ExperimentRunnerService : IExperimentRunnerService
             switch (experimentType)
             {
                 case "position":
-                    await RunPositionExperimentAsync(runId, request, progress, aiService, experimentLogger, cancellationToken);
+                    var (posTokens, posCost) = await RunPositionExperimentAsync(runId, request, progress, aiService, experimentLogger, cancellationToken);
+                    totalTokens = posTokens;
+                    estimatedCost = posCost;
                     break;
 
                 case "compression":
-                    await RunCompressionExperimentAsync(runId, request, progress, aiService, cancellationToken);
+                    var (compTokens, compCost) = await RunCompressionExperimentAsync(runId, request, progress, aiService, cancellationToken);
+                    totalTokens = compTokens;
+                    estimatedCost = compCost;
                     break;
 
                 case "persona":
@@ -222,7 +230,7 @@ public class ExperimentRunnerService : IExperimentRunnerService
         }
     }
 
-    private async Task RunPositionExperimentAsync(
+    private async Task<(int tokens, decimal cost)> RunPositionExperimentAsync(
         int runId,
         RunExperimentRequest request,
         ChannelWriter<ExperimentProgressEvent> progress,
@@ -238,7 +246,14 @@ public class ExperimentRunnerService : IExperimentRunnerService
             Message = $"Running position test with needle fact: {needleFact}"
         }, cancellationToken);
 
-        var result = await aiService.RunPositionTestAsync(request.AthleteId, needleFact, request.Persona);
+        var result = await aiService.RunPositionTestAsync(request.AthleteId, needleFact, request.Persona, request.Provider, request.Model);
+
+        // Position test runs 3 summary generations (start, middle, end)
+        // Estimate tokens based on typical summary length
+        var totalTokens = 0;
+        var totalInputTokens = 0;
+        var totalOutputTokens = 0;
+        var totalCost = 0m;
 
         foreach (var outcome in result.Results)
         {
@@ -252,6 +267,13 @@ public class ExperimentRunnerService : IExperimentRunnerService
 
             await experimentLogger.LogPositionTestAsync(runId, position, needleFact, outcome.FactRetrieved, outcome.GeneratedSummary);
 
+            // Estimate tokens for this position test (input based on entries, output based on summary)
+            var inputTokens = outcome.TotalEntries * 100; // ~100 tokens per entry estimate
+            var outputTokens = outcome.GeneratedSummary.Length / 4;
+            totalInputTokens += inputTokens;
+            totalOutputTokens += outputTokens;
+            totalTokens += inputTokens + outputTokens;
+
             await progress.WriteAsync(new ExperimentProgressEvent
             {
                 Type = "position",
@@ -259,9 +281,14 @@ public class ExperimentRunnerService : IExperimentRunnerService
                 Data = new { position = outcome.Position, found = outcome.FactRetrieved, snippet = outcome.GeneratedSummary }
             }, cancellationToken);
         }
+
+        // Calculate cost using the cost calculator
+        totalCost = _costCalculator.CalculateCost(request.Provider, request.Model, totalInputTokens, totalOutputTokens);
+
+        return (totalTokens, totalCost);
     }
 
-    private async Task RunCompressionExperimentAsync(
+    private async Task<(int tokens, decimal cost)> RunCompressionExperimentAsync(
         int runId,
         RunExperimentRequest request,
         ChannelWriter<ExperimentProgressEvent> progress,
@@ -274,7 +301,18 @@ public class ExperimentRunnerService : IExperimentRunnerService
             Message = "Running compression test with full, compressed, and limited contexts..."
         }, cancellationToken);
 
-        var result = await aiService.RunCompressionTestAsync(request.AthleteId, request.Persona);
+        var result = await aiService.RunCompressionTestAsync(request.AthleteId, request.Persona, request.Provider, request.Model);
+
+        // Calculate total tokens and cost across all three compression test variants
+        var totalTokens = result.FullContext.EstimatedTokens +
+                         result.CompressedContext.EstimatedTokens +
+                         result.LimitedContext.EstimatedTokens;
+
+        // Estimate input/output split (roughly 60% input, 40% output for summaries)
+        var totalInputTokens = (int)(totalTokens * 0.6);
+        var totalOutputTokens = totalTokens - totalInputTokens;
+
+        var totalCost = _costCalculator.CalculateCost(request.Provider, request.Model, totalInputTokens, totalOutputTokens);
 
         await progress.WriteAsync(new ExperimentProgressEvent
         {
@@ -285,9 +323,12 @@ public class ExperimentRunnerService : IExperimentRunnerService
                 fullContext = new { entries = result.FullContext.EntriesUsed, tokens = result.FullContext.EstimatedTokens },
                 compressedContext = new { entries = result.CompressedContext.EntriesUsed, tokens = result.CompressedContext.EstimatedTokens },
                 limitedContext = new { entries = result.LimitedContext.EntriesUsed, tokens = result.LimitedContext.EstimatedTokens },
-                conclusion = result.Conclusion
+                conclusion = result.Conclusion,
+                totalCost = totalCost
             }
         }, cancellationToken);
+
+        return (totalTokens, totalCost);
     }
 
     private async Task<(int tokens, decimal cost)> RunPersonaExperimentAsync(
@@ -310,6 +351,8 @@ public class ExperimentRunnerService : IExperimentRunnerService
 
         var personas = new[] { "goggins", "lasso" };
         var totalTokens = 0;
+        var totalInputTokens = 0;
+        var totalOutputTokens = 0;
         var totalCost = 0m;
 
         foreach (var persona in personas)
@@ -326,8 +369,11 @@ public class ExperimentRunnerService : IExperimentRunnerService
                 EntryOrder = request.EntryOrder
             };
 
-            var summary = await aiService.GenerateWeeklySummaryAsync(request.AthleteId, persona, options);
+            var summary = await aiService.GenerateWeeklySummaryAsync(request.AthleteId, persona, options, request.Provider, request.Model);
             totalTokens += summary.TokensUsed;
+            totalInputTokens += summary.InputTokens;
+            totalOutputTokens += summary.OutputTokens;
+            totalCost += summary.EstimatedCost;
 
             // Extract and verify claims
             await progress.WriteAsync(new ExperimentProgressEvent
@@ -369,8 +415,11 @@ public class ExperimentRunnerService : IExperimentRunnerService
             }
         }
 
-        // Calculate estimated cost based on provider rates
-        totalCost = (totalTokens / 1000m) * (decimal)(_providerInfo.CostPer1KInputTokens + _providerInfo.CostPer1KOutputTokens) / 2;
+        // If cost was not calculated by the AI service (e.g., 0), calculate using the cost calculator
+        if (totalCost == 0 && totalTokens > 0)
+        {
+            totalCost = _costCalculator.CalculateCost(request.Provider, request.Model, totalInputTokens, totalOutputTokens);
+        }
 
         return (totalTokens, totalCost);
     }

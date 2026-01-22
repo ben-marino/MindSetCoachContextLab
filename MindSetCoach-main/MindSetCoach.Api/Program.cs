@@ -126,6 +126,9 @@ try
     // Register KernelFactory for creating provider-specific kernels
     builder.Services.AddSingleton<IKernelFactory, KernelFactory>();
 
+    // Register CostCalculatorService for accurate API cost tracking
+    builder.Services.AddSingleton<ICostCalculatorService, CostCalculatorService>();
+
     // Register application services
     builder.Services.AddScoped<IAuthService, AuthService>();
     builder.Services.AddScoped<IJournalService, JournalService>();
