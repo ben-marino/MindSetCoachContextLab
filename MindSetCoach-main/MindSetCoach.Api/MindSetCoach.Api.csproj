@@ -31,4 +31,11 @@
 
   </ItemGroup>
 
+  <!-- Copy prompt templates to output directory -->
+  <ItemGroup>
+    <None Update="Prompts\**\*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>

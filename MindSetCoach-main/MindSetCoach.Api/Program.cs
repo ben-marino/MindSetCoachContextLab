@@ -120,6 +120,9 @@ try
     // Register CarouselExporterService as scoped (generates LinkedIn carousel images from experiment results)
     builder.Services.AddScoped<ICarouselExporterService, CarouselExporterService>();
 
+    // Register InsightSummarizerService as scoped (generates LinkedIn post content from experiment insights)
+    builder.Services.AddScoped<IInsightSummarizerService, InsightSummarizerService>();
+
     // Register KernelFactory for creating provider-specific kernels
     builder.Services.AddSingleton<IKernelFactory, KernelFactory>();
 

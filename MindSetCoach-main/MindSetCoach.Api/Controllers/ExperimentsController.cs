@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MindSetCoach.Api.Data;
 using MindSetCoach.Api.DTOs;
+using MindSetCoach.Api.Models;
 using MindSetCoach.Api.Models.Experiments;
 using MindSetCoach.Api.Services.AI.Experiments;
 using System.Text.Json;
@@ -22,6 +23,7 @@ public class ExperimentsController : ControllerBase
     private readonly IBatchExperimentService _batchExperimentService;
     private readonly IReportGeneratorService _reportGenerator;
     private readonly ICarouselExporterService _carouselExporter;
+    private readonly IInsightSummarizerService _insightSummarizer;
     private readonly ContextExperimentLogger _experimentLogger;
     private readonly ExperimentsDbContext _dbContext;
     private readonly ILogger<ExperimentsController> _logger;
@@ -31,6 +33,7 @@ public class ExperimentsController : ControllerBase
         IBatchExperimentService batchExperimentService,
         IReportGeneratorService reportGenerator,
         ICarouselExporterService carouselExporter,
+        IInsightSummarizerService insightSummarizer,
         ContextExperimentLogger experimentLogger,
         ExperimentsDbContext dbContext,
         ILogger<ExperimentsController> logger)
@@ -39,6 +42,7 @@ public class ExperimentsController : ControllerBase
         _batchExperimentService = batchExperimentService;
         _reportGenerator = reportGenerator;
         _carouselExporter = carouselExporter;
+        _insightSummarizer = insightSummarizer;
         _experimentLogger = experimentLogger;
         _dbContext = dbContext;
         _logger = logger;
@@ -671,6 +675,87 @@ public class ExperimentsController : ControllerBase
         {
             _logger.LogError(ex, "Error generating carousel for batch {BatchId}", batchId);
             return StatusCode(500, new { error = "Failed to generate carousel", details = ex.Message });
+        }
+    }
+
+    #endregion
+
+    #region Insights Endpoints
+
+    /// <summary>
+    /// Generate LinkedIn post content from batch experiment insights.
+    /// Uses AI to create compelling hooks, body content, and calls to action.
+    /// </summary>
+    /// <param name="batchId">The batch ID (GUID)</param>
+    /// <param name="tone">Post tone: professional (default), conversational, or technical</param>
+    /// <returns>LinkedIn post content with hook, body, CTA, and hashtags</returns>
+    [HttpGet("batch/{batchId}/insights")]
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(LinkedInPostContent), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<LinkedInPostContent>> GetBatchInsights(
+        string batchId,
+        [FromQuery] string tone = "professional")
+    {
+        _logger.LogInformation("Generating {Tone} insights for batch {BatchId}", tone, batchId);
+
+        // Parse tone
+        if (!Enum.TryParse<PostTone>(tone, ignoreCase: true, out var postTone))
+        {
+            return BadRequest(new { error = $"Invalid tone '{tone}'. Valid tones: professional, conversational, technical" });
+        }
+
+        try
+        {
+            var content = await _insightSummarizer.GeneratePostAsync(batchId, postTone);
+            return Ok(content);
+        }
+        catch (InvalidOperationException ex) when (ex.Message.Contains("not found"))
+        {
+            return NotFound(new { error = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error generating insights for batch {BatchId}", batchId);
+            return StatusCode(500, new { error = "Failed to generate insights", details = ex.Message });
+        }
+    }
+
+    /// <summary>
+    /// Generate carousel slide captions from batch experiment insights.
+    /// </summary>
+    /// <param name="batchId">The batch ID (GUID)</param>
+    /// <param name="slideCount">Number of slide captions to generate (default: 5)</param>
+    /// <returns>List of captions for carousel slides</returns>
+    [HttpGet("batch/{batchId}/insights/captions")]
+    [AllowAnonymous]
+    [ProducesResponseType(typeof(List<string>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<List<string>>> GetBatchCarouselCaptions(
+        string batchId,
+        [FromQuery] int slideCount = 5)
+    {
+        _logger.LogInformation("Generating {SlideCount} carousel captions for batch {BatchId}", slideCount, batchId);
+
+        if (slideCount < 1 || slideCount > 10)
+        {
+            return BadRequest(new { error = "Slide count must be between 1 and 10" });
+        }
+
+        try
+        {
+            var captions = await _insightSummarizer.GenerateCarouselCaptionsAsync(batchId, slideCount);
+            return Ok(captions);
+        }
+        catch (InvalidOperationException ex) when (ex.Message.Contains("not found"))
+        {
+            return NotFound(new { error = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error generating carousel captions for batch {BatchId}", batchId);
+            return StatusCode(500, new { error = "Failed to generate captions", details = ex.Message });
         }
     }
 

@@ -18,5 +18,6 @@ rootCommand.AddCommand(BatchCommand.Create());
 rootCommand.AddCommand(ReportCommand.Create());
 rootCommand.AddCommand(ListCommand.Create());
 rootCommand.AddCommand(CarouselCommand.Create());
+rootCommand.AddCommand(InsightsCommand.Create());
 
 return await rootCommand.InvokeAsync(args);
