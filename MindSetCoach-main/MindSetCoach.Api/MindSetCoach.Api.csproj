@@ -21,6 +21,10 @@
     <!-- Semantic Kernel for AI features -->
     <PackageReference Include="Microsoft.SemanticKernel" Version="1.25.0" />
     <PackageReference Include="Microsoft.SemanticKernel.Connectors.OpenAI" Version="1.25.0" />
+    <PackageReference Include="Microsoft.SemanticKernel.Connectors.AzureOpenAI" Version="1.25.0" />
+
+    <!-- Azure Identity for Azure AD authentication -->
+    <PackageReference Include="Azure.Identity" Version="1.13.0" />
 
     <!-- Cron scheduling -->
     <PackageReference Include="Cronos" Version="0.8.4" />

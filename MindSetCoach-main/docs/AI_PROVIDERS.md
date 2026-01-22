@@ -1,6 +1,6 @@
 # MindSetCoach AI Provider Guide
 
-Run context engineering experiments across **6 AI providers** to compare quality, cost, and behavior patterns.
+Run context engineering experiments across **7 AI providers** to compare quality, cost, and behavior patterns.
 
 ## Provider Overview
 
@@ -11,7 +11,8 @@ Run context engineering experiments across **6 AI providers** to compare quality
 | **Google** | Gemini 2.5, 2.0 | $$ | Long context (1M) |
 | **DeepSeek** | Chat, Reasoner | $ | Budget + reasoning |
 | **Ollama** | Llama, Mistral, etc. | Free | Privacy, offline |
-| **Azure** | OpenAI models | $$ | Enterprise |
+| **Azure** | OpenAI models | $$ | Enterprise (legacy) |
+| **Azure OpenAI** | OpenAI models | $$ | Enterprise (recommended) |
 
 ## Cost Comparison (per 1M tokens)
 
@@ -102,6 +103,39 @@ Get key: https://platform.deepseek.com/
 ```
 No API key needed. Install: https://ollama.com/
 
+### Azure OpenAI (Enterprise)
+```json
+{
+  "SemanticKernel": {
+    "Provider": "azureopenai",
+    "AzureOpenAI": {
+      "Endpoint": "https://your-resource-name.openai.azure.com/",
+      "DeploymentName": "gpt-4o-mini",
+      "ApiKey": "your-api-key",
+      "UseAzureAD": false
+    }
+  }
+}
+```
+Environment variables:
+- `AZURE_OPENAI_ENDPOINT` - Azure OpenAI resource endpoint
+- `AZURE_OPENAI_API_KEY` - API key (if not using Azure AD)
+- `AZURE_OPENAI_DEPLOYMENT` - Model deployment name
+
+**For Azure AD authentication** (managed identity, service principal):
+```json
+{
+  "SemanticKernel": {
+    "Provider": "azureopenai",
+    "AzureOpenAI": {
+      "Endpoint": "https://your-resource-name.openai.azure.com/",
+      "DeploymentName": "gpt-4o-mini",
+      "UseAzureAD": true
+    }
+  }
+}
+```
+
 ---
 
 ## Model Recommendations by Use Case
@@ -164,6 +198,22 @@ No API key needed. Install: https://ollama.com/
   - `deepseek-r1:14b` - Best reasoning
   - `mistral:7b` - Fastest
   - `phi3:medium` - Good 14B option
+
+### Azure OpenAI (Enterprise)
+- **Enterprise-grade**: SOC 2, HIPAA, GDPR compliant
+- **Data privacy**: Data processed within your Azure tenant
+- **SLA**: 99.9% availability guarantee
+- **Regional deployment**: Deploy in specific Azure regions for latency optimization
+- **Authentication options**:
+  - **API Key**: Simple setup, good for development
+  - **Azure AD**: Managed identity, service principal, or user authentication
+- **Deployment names**: Use your custom deployment names, not model IDs
+- **Setup steps**:
+  1. Create Azure OpenAI resource in Azure Portal
+  2. Deploy a model in Azure OpenAI Studio
+  3. Copy endpoint URL from resource overview
+  4. Get API key from "Keys and Endpoint" blade
+  5. Configure app with endpoint, deployment name, and API key
 
 ---
 

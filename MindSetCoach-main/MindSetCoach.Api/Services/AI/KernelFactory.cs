@@ -1,3 +1,4 @@
+using Azure.Identity;
 using Microsoft.SemanticKernel;
 
 namespace MindSetCoach.Api.Services.AI;
@@ -11,7 +12,7 @@ public interface IKernelFactory
     /// <summary>
     /// Create a Kernel instance for the specified provider and model.
     /// </summary>
-    /// <param name="provider">Provider name: openai, anthropic, deepseek, google, ollama</param>
+    /// <param name="provider">Provider name: openai, anthropic, deepseek, google, ollama, azure, azureopenai</param>
     /// <param name="model">Model ID (e.g., gpt-4o-mini, claude-3-haiku-20240307)</param>
     /// <returns>Configured Kernel instance</returns>
     Kernel CreateKernel(string provider, string model);
@@ -130,9 +131,47 @@ public class KernelFactory : IKernelFactory
                 builder.AddAzureOpenAIChatCompletion(model, azureEndpoint, azureKey);
                 break;
 
+            case "azureopenai":
+                var azureOpenAIEndpoint = _configuration["SemanticKernel:AzureOpenAI:Endpoint"]
+                    ?? Environment.GetEnvironmentVariable("AZURE_OPENAI_ENDPOINT");
+                var azureOpenAIDeployment = _configuration["SemanticKernel:AzureOpenAI:DeploymentName"]
+                    ?? Environment.GetEnvironmentVariable("AZURE_OPENAI_DEPLOYMENT")
+                    ?? model;
+                var useAzureAD = _configuration.GetValue<bool>("SemanticKernel:AzureOpenAI:UseAzureAD");
+
+                if (string.IsNullOrEmpty(azureOpenAIEndpoint))
+                    throw new InvalidOperationException("Azure OpenAI endpoint not configured. Set SemanticKernel:AzureOpenAI:Endpoint or AZURE_OPENAI_ENDPOINT");
+
+                if (useAzureAD)
+                {
+                    // Use Azure Active Directory authentication via DefaultAzureCredential
+                    _logger.LogInformation("Using Azure AD authentication for Azure OpenAI");
+                    var credential = new DefaultAzureCredential();
+                    builder.AddAzureOpenAIChatCompletion(
+                        deploymentName: azureOpenAIDeployment,
+                        endpoint: azureOpenAIEndpoint,
+                        credential);
+                }
+                else
+                {
+                    // Use API key authentication
+                    var azureOpenAIKey = _configuration["SemanticKernel:AzureOpenAI:ApiKey"]
+                        ?? Environment.GetEnvironmentVariable("AZURE_OPENAI_API_KEY");
+
+                    if (string.IsNullOrEmpty(azureOpenAIKey))
+                        throw new InvalidOperationException("Azure OpenAI API key not configured. Set SemanticKernel:AzureOpenAI:ApiKey or AZURE_OPENAI_API_KEY");
+
+                    _logger.LogInformation("Using API key authentication for Azure OpenAI");
+                    builder.AddAzureOpenAIChatCompletion(
+                        deploymentName: azureOpenAIDeployment,
+                        endpoint: azureOpenAIEndpoint,
+                        apiKey: azureOpenAIKey);
+                }
+                break;
+
             default:
                 throw new InvalidOperationException(
-                    $"Unknown AI provider: {provider}. Supported: openai, anthropic, google, deepseek, ollama, azure");
+                    $"Unknown AI provider: {provider}. Supported: openai, anthropic, google, deepseek, ollama, azure, azureopenai");
         }
 
         return builder.Build();
@@ -150,6 +189,7 @@ public class KernelFactory : IKernelFactory
             "deepseek" => !string.IsNullOrEmpty(GetApiKey("deepseek")),
             "azure" => !string.IsNullOrEmpty(GetApiKey("azure")) &&
                        !string.IsNullOrEmpty(_configuration["AI:AzureEndpoint"] ?? Environment.GetEnvironmentVariable("AZURE_OPENAI_ENDPOINT")),
+            "azureopenai" => IsAzureOpenAIConfigured(),
             "ollama" => true, // Always available if Ollama is running locally
             _ => false
         };
@@ -190,5 +230,26 @@ public class KernelFactory : IKernelFactory
             _ when modelId.StartsWith("gpt-") => "deepseek-chat",
             _ => modelId
         };
+    }
+
+    private bool IsAzureOpenAIConfigured()
+    {
+        var endpoint = _configuration["SemanticKernel:AzureOpenAI:Endpoint"]
+            ?? Environment.GetEnvironmentVariable("AZURE_OPENAI_ENDPOINT");
+
+        if (string.IsNullOrEmpty(endpoint))
+            return false;
+
+        var useAzureAD = _configuration.GetValue<bool>("SemanticKernel:AzureOpenAI:UseAzureAD");
+
+        // If using Azure AD, we don't need an API key
+        if (useAzureAD)
+            return true;
+
+        // Otherwise, we need an API key
+        var apiKey = _configuration["SemanticKernel:AzureOpenAI:ApiKey"]
+            ?? Environment.GetEnvironmentVariable("AZURE_OPENAI_API_KEY");
+
+        return !string.IsNullOrEmpty(apiKey);
     }
 }
