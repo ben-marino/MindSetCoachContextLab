@@ -306,32 +306,171 @@ public class MockMentalCoachAIService : IMentalCoachAIService
 
         var entries = await _journalService.GetAthleteEntriesAsync(athleteId);
 
-        // Log for experiment tracking even in mock mode
+        // Build a realistic mock summary that references actual journal content
+        var mockSummary = BuildMockSummary(entries, persona);
+
+        // Estimate tokens based on actual content
+        var inputTokens = entries.Sum(e =>
+            (e.EmotionalState?.Length ?? 0) +
+            (e.SessionReflection?.Length ?? 0) +
+            (e.MentalBarriers?.Length ?? 0)) / 4 + 200; // ~4 chars per token + system prompt
+        var outputTokens = mockSummary.Length / 4;
+        var totalTokens = inputTokens + outputTokens;
+
+        // Calculate estimated cost using provider info
+        var actualProvider = provider ?? "mock";
+        var actualModel = model ?? "mock";
+        var estimatedCost = CalculateMockCost(actualProvider, actualModel, inputTokens, outputTokens);
+
+        // Log for experiment tracking
         _experimentLogger.LogContextSent(new ContextLog
         {
             AthleteId = athleteId,
             Persona = persona,
             EntryCount = entries.Count,
-            TotalTokensEstimate = 0,
+            TotalTokensEstimate = inputTokens,
             ContextOptions = options,
             Timestamp = DateTime.UtcNow
         });
-
-        var mockSummary = persona == "goggins"
-            ? $"[MOCK GOGGINS] You logged {entries.Count} entries. Stop making excuses. The work isn't done. Stay hard."
-            : $"[MOCK LASSO] Hey there! You've been showing up - {entries.Count} entries logged. That takes courage. Believe in yourself!";
 
         return new WeeklySummaryResponse
         {
             Summary = mockSummary,
             Persona = persona,
             EntriesAnalyzed = entries.Count,
-            TokensUsed = 0,
-            InputTokens = 0,
-            OutputTokens = 0,
-            EstimatedCost = 0,
+            TokensUsed = totalTokens,
+            InputTokens = inputTokens,
+            OutputTokens = outputTokens,
+            EstimatedCost = estimatedCost,
             ContextOptionsUsed = options
         };
+    }
+
+    private string BuildMockSummary(List<DTOs.JournalEntryResponse> entries, string persona)
+    {
+        if (!entries.Any())
+        {
+            return persona.ToLower() == "goggins"
+                ? "[MOCK] No entries to analyze. You need to show up and do the work first."
+                : "[MOCK] No entries yet! Looking forward to hearing about your journey.";
+        }
+
+        var sb = new System.Text.StringBuilder();
+        sb.AppendLine($"[MOCK {persona.ToUpper()}]");
+        sb.AppendLine();
+
+        // Extract content from entries to create claim-worthy sentences
+        var emotionalStates = entries
+            .Where(e => !string.IsNullOrWhiteSpace(e.EmotionalState))
+            .Select(e => e.EmotionalState)
+            .Take(3)
+            .ToList();
+
+        var barriers = entries
+            .Where(e => !string.IsNullOrWhiteSpace(e.MentalBarriers))
+            .Select(e => e.MentalBarriers)
+            .Take(3)
+            .ToList();
+
+        var reflections = entries
+            .Where(e => !string.IsNullOrWhiteSpace(e.SessionReflection))
+            .Select(e => e.SessionReflection)
+            .Take(3)
+            .ToList();
+
+        if (persona.ToLower() == "goggins")
+        {
+            // Goggins-style mock summary with claims
+            if (emotionalStates.Any())
+            {
+                var state = emotionalStates.First();
+                if (state.ToLower().Contains("confident") || state.ToLower().Contains("good") || state.ToLower().Contains("strong"))
+                {
+                    sb.AppendLine($"You reported feeling confident this week. Good. But confidence without action is worthless.");
+                }
+                else if (state.ToLower().Contains("anxious") || state.ToLower().Contains("stressed") || state.ToLower().Contains("worried"))
+                {
+                    sb.AppendLine($"You mentioned feeling anxious. That anxiety is your body telling you that you're about to grow. Embrace it.");
+                }
+                else
+                {
+                    sb.AppendLine($"You felt {TruncateText(state, 30)}. Your emotional state doesn't define your output.");
+                }
+            }
+
+            if (barriers.Any())
+            {
+                var barrier = barriers.First();
+                sb.AppendLine($"You struggled with {TruncateText(barrier, 50)}. Stop letting that be your excuse. Attack it head on.");
+            }
+
+            if (reflections.Any())
+            {
+                sb.AppendLine($"You completed your training sessions. Now do it again tomorrow. And the day after.");
+            }
+
+            sb.AppendLine();
+            sb.AppendLine($"You logged {entries.Count} entries. The work isn't done. Stay hard.");
+        }
+        else
+        {
+            // Lasso-style mock summary with claims
+            if (emotionalStates.Any())
+            {
+                var state = emotionalStates.First();
+                if (state.ToLower().Contains("anxious") || state.ToLower().Contains("stressed") || state.ToLower().Contains("nervous"))
+                {
+                    sb.AppendLine($"You mentioned feeling stressed this week. Hey, that's okay - even goldfish have bad days. The important thing is you showed up.");
+                }
+                else if (state.ToLower().Contains("confident") || state.ToLower().Contains("good") || state.ToLower().Contains("happy"))
+                {
+                    sb.AppendLine($"Your confidence improved this week - I can see it in your entries. Keep riding that wave!");
+                }
+                else
+                {
+                    sb.AppendLine($"You reported feeling {TruncateText(state, 30)}. Every feeling is valid, friend.");
+                }
+            }
+
+            if (barriers.Any())
+            {
+                var barrier = barriers.First();
+                sb.AppendLine($"You faced some challenges with {TruncateText(barrier, 50)}. That takes courage to admit. We'll work through it together.");
+            }
+
+            if (reflections.Any())
+            {
+                sb.AppendLine($"You showed up and did the work. That's what counts.");
+            }
+
+            sb.AppendLine();
+            sb.AppendLine($"You've been showing up - {entries.Count} entries logged. That takes courage. Believe in yourself!");
+        }
+
+        return sb.ToString();
+    }
+
+    private string TruncateText(string text, int maxLength)
+    {
+        if (string.IsNullOrEmpty(text)) return "";
+        text = text.Replace("\n", " ").Replace("\r", " ").Trim();
+        return text.Length <= maxLength ? text : text.Substring(0, maxLength) + "...";
+    }
+
+    private decimal CalculateMockCost(string provider, string model, int inputTokens, int outputTokens)
+    {
+        // Use realistic pricing estimates
+        var (inputRate, outputRate) = (provider.ToLower(), model.ToLower()) switch
+        {
+            ("openai", var m) when m.Contains("gpt-4o-mini") => (0.00015m, 0.0006m),
+            ("openai", var m) when m.Contains("gpt-4o") => (0.0025m, 0.01m),
+            ("deepseek", _) => (0.00014m, 0.00028m),
+            ("azure", _) => (0.001m, 0.002m),
+            ("ollama", _) => (0m, 0m),
+            _ => (0.001m, 0.002m) // Default estimate
+        };
+
+        return (inputTokens / 1000m * inputRate) + (outputTokens / 1000m * outputRate);
     }
 
     public Task<PatternAnalysisResponse> AnalyzePatternsAsync(int athleteId, int daysToAnalyze = 30)
