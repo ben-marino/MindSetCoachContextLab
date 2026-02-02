@@ -257,6 +257,85 @@
             font-size: 0.85rem;
         }
 
+        /* Control bar - always visible */
+        .control-bar {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+        .control-bar .connection-status {
+            background: rgba(255,255,255,0.1);
+            padding: 0.4rem 0.75rem;
+            border-radius: 20px;
+        }
+        .gear-btn {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: white;
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+        .gear-btn:hover {
+            background: rgba(255,255,255,0.2);
+        }
+        .gear-btn svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        /* Advanced panel - collapsed by default */
+        .advanced-panel {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease, padding 0.3s ease;
+            padding: 0 0;
+        }
+        .advanced-panel.panel-open {
+            max-height: 300px;
+            padding: 1rem 0 0 0;
+        }
+        .advanced-panel .text-link {
+            color: rgba(255,255,255,0.7);
+            background: none;
+            border: none;
+            font-size: 0.85rem;
+            cursor: pointer;
+            text-decoration: underline;
+            padding: 0;
+        }
+        .advanced-panel .text-link:hover {
+            color: white;
+        }
+        .advanced-panel .token-warning {
+            font-size: 0.75rem;
+            color: #fbbf24;
+            margin-top: 0.5rem;
+        }
+
+        /* Action buttons row */
+        .action-buttons {
+            display: flex;
+            gap: 0.75rem;
+            margin-top: 1rem;
+        }
+        .action-buttons .btn {
+            flex: 1;
+        }
+
+        /* Helper text */
+        .helper-text {
+            font-size: 0.8rem;
+            color: rgba(255,255,255,0.6);
+            margin-top: 0.5rem;
+        }
+
         /* Loading states */
         .loading-spinner {
             display: inline-block;
@@ -524,50 +603,51 @@
 
         <!-- Config Panel -->
         <div class="config-panel">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <h5 class="mb-0 fw-bold">API Configuration</h5>
+            <!-- Part A: Control Bar (always visible) -->
+            <div class="control-bar">
                 <div class="connection-status" id="connectionStatus">
                     <span class="status-dot status-disconnected"></span>
-                    <span>Not connected</span>
+                    <span>Disconnected</span>
                 </div>
+                <select class="form-select run-selector" id="runSelector" style="flex: 1; max-width: 400px;">
+                    <option value="">-- Select a run --</option>
+                </select>
+                <button class="gear-btn" id="advancedPanelToggle" type="button" title="Advanced settings">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                </button>
             </div>
-            <div class="row g-3">
-                <div class="col-md-4">
-                    <label class="form-label">API Base URL</label>
-                    <input type="text" class="form-control" id="apiBaseUrl" value="" placeholder="(same origin)">
+            <div class="helper-text">Pick a run to view results, or start a new experiment</div>
+
+            <!-- Part B: Advanced Panel (collapsed by default) -->
+            <div class="advanced-panel" id="advancedPanel">
+                <div class="row g-3">
+                    <div class="col-md-5">
+                        <label class="form-label">API Base URL</label>
+                        <input type="text" class="form-control" id="apiBaseUrl" value="" placeholder="(same origin)">
+                    </div>
+                    <div class="col-md-5">
+                        <label class="form-label">JWT Token</label>
+                        <input type="password" class="form-control" id="jwtToken" placeholder="Enter your JWT token">
+                    </div>
+                    <div class="col-md-2 d-flex flex-column justify-content-end gap-2">
+                        <button class="text-link" id="testConnectionBtn" type="button">Ping API</button>
+                        <button class="text-link" id="loadRunsBtn" type="button">Fetch Runs</button>
+                    </div>
                 </div>
-                <div class="col-md-4">
-                    <label class="form-label">JWT Token</label>
-                    <input type="password" class="form-control" id="jwtToken" placeholder="Enter your JWT token">
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label">Select Experiment Run</label>
-                    <select class="form-select run-selector" id="runSelector">
-                        <option value="">-- Load runs from API --</option>
-                    </select>
-                </div>
+                <div class="token-warning">⚠️ Don't share screenshots with tokens visible</div>
             </div>
-            <div class="row g-3 mt-2">
-                <div class="col-md-3">
-                    <button class="btn btn-sm btn-outline-light w-100" id="testConnectionBtn">
-                        Ping API
-                    </button>
-                </div>
-                <div class="col-md-3">
-                    <button class="btn btn-sm btn-outline-light w-100" id="loadRunsBtn">
-                        Fetch Runs
-                    </button>
-                </div>
-                <div class="col-md-3">
-                    <button class="btn btn-outline-warning w-100" id="useDemoDataBtn">
-                        🧪 Demo Mode
-                    </button>
-                </div>
-                <div class="col-md-3">
-                    <button class="btn btn-success w-100" id="runExperimentBtn" data-bs-toggle="modal" data-bs-target="#runExperimentModal">
-                        + Run New Experiment
-                    </button>
-                </div>
+
+            <!-- Action buttons below control bar -->
+            <div class="action-buttons">
+                <button class="btn btn-outline-warning" id="useDemoDataBtn">
+                    🧪 Demo Mode
+                </button>
+                <button class="btn btn-success" id="runExperimentBtn" data-bs-toggle="modal" data-bs-target="#runExperimentModal">
+                    + Run New Experiment
+                </button>
             </div>
             <div id="connectionError" class="mt-3" style="display: none;"></div>
         </div>
@@ -1614,7 +1694,7 @@
             btn.disabled = false;
           }, 2000);
         } catch (err) {
-          updateConnectionStatus('disconnected', 'Not connected');
+          updateConnectionStatus('disconnected', 'Disconnected');
           showError('connectionError', err.message);
           btn.innerHTML = 'Connection Failed';
           btn.classList.remove('btn-outline-light');
@@ -2469,6 +2549,13 @@
       // ====================================================================
       // Event Listeners
       // ====================================================================
+
+      // Advanced panel toggle
+      document.getElementById('advancedPanelToggle').addEventListener('click', function() {
+        const panel = document.getElementById('advancedPanel');
+        panel.classList.toggle('panel-open');
+      });
+
       document.getElementById('testConnectionBtn').addEventListener('click', testConnection);
       document.getElementById('loadRunsBtn').addEventListener('click', loadRuns);
       document.getElementById('useDemoDataBtn').addEventListener('click', () => {
