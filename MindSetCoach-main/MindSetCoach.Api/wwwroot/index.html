@@ -596,6 +596,46 @@
             background: linear-gradient(135deg, #047857, #065f46);
             color: white;
         }
+
+        /* Recipe preset chips */
+        .recipe-chips {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-bottom: 2rem;
+        }
+        .recipe-chip {
+            background: white;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 1rem 1.25rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        .recipe-chip:hover {
+            border-color: #6366f1;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.15);
+            transform: translateY(-1px);
+        }
+        .recipe-chip .chip-emoji {
+            font-size: 1.5rem;
+        }
+        .recipe-chip .chip-content {
+            display: flex;
+            flex-direction: column;
+        }
+        .recipe-chip .chip-title {
+            font-weight: 600;
+            color: #1e293b;
+            font-size: 0.95rem;
+        }
+        .recipe-chip .chip-subtitle {
+            font-size: 0.8rem;
+            color: #64748b;
+        }
     </style>
 </head>
 <body>
@@ -650,6 +690,31 @@
                 </button>
             </div>
             <div id="connectionError" class="mt-3" style="display: none;"></div>
+        </div>
+
+        <!-- Recipe Preset Chips -->
+        <div class="recipe-chips">
+            <div class="recipe-chip" onclick="scrollToExperiment('personaSection')">
+                <span class="chip-emoji">🎭</span>
+                <div class="chip-content">
+                    <span class="chip-title">Persona War</span>
+                    <span class="chip-subtitle">Goggins vs Lasso</span>
+                </div>
+            </div>
+            <div class="recipe-chip" onclick="scrollToExperiment('dumbZoneSection')">
+                <span class="chip-emoji">🎯</span>
+                <div class="chip-content">
+                    <span class="chip-title">Lost in the Middle</span>
+                    <span class="chip-subtitle">AI attention drop-off</span>
+                </div>
+            </div>
+            <div class="recipe-chip" onclick="scrollToExperiment('compressionSection')">
+                <span class="chip-emoji">📦</span>
+                <div class="chip-content">
+                    <span class="chip-title">Compression Test</span>
+                    <span class="chip-subtitle">Quality vs cost</span>
+                </div>
+            </div>
         </div>
 
         <!-- Header -->
@@ -788,7 +853,7 @@
         </div>
 
         <!-- Experiment 1: Persona War -->
-        <div class="mb-5" id="personaExperiment">
+        <div class="mb-5" id="personaSection">
             <div class="experiment-section-header">
                 <h2 class="mb-2">
                     <span class="me-2">Experiment 1: The Persona War</span>
@@ -898,7 +963,7 @@
         </div>
 
         <!-- Experiment 2: The Dumb Zone -->
-        <div class="mb-5" id="positionExperiment">
+        <div class="mb-5" id="dumbZoneSection">
             <div class="experiment-section-header">
                 <h2 class="mb-2">
                     <span class="me-2">Experiment 2: The "Dumb Zone"</span>
@@ -1261,7 +1326,7 @@
         </div>
 
         <!-- Experiment 3: Compression -->
-        <div class="mb-5" id="compressionExperiment">
+        <div class="mb-5" id="compressionSection">
             <div class="experiment-section-header">
                 <h2 class="mb-2">
                     <span class="me-2">Experiment 3: Context Compression Trade-offs</span>
@@ -1594,6 +1659,16 @@
           return document.getElementById('jwtToken').value;
         }
       };
+
+      // ====================================================================
+      // Recipe Chip Navigation
+      // ====================================================================
+      function scrollToExperiment(sectionId) {
+        const el = document.getElementById(sectionId);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }
 
       // Current loaded data
       let currentRun = null;
