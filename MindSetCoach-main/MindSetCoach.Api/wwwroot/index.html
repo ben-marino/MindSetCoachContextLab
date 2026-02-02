@@ -549,18 +549,18 @@
             </div>
             <div class="row g-3 mt-2">
                 <div class="col-md-3">
-                    <button class="btn btn-light w-100" id="testConnectionBtn">
-                        Test Connection
+                    <button class="btn btn-sm btn-outline-light w-100" id="testConnectionBtn">
+                        Ping API
                     </button>
                 </div>
                 <div class="col-md-3">
-                    <button class="btn btn-outline-light w-100" id="loadRunsBtn">
-                        Refresh Runs
+                    <button class="btn btn-sm btn-outline-light w-100" id="loadRunsBtn">
+                        Fetch Runs
                     </button>
                 </div>
                 <div class="col-md-3">
                     <button class="btn btn-outline-warning w-100" id="useDemoDataBtn">
-                        Use Demo Data
+                        🧪 Demo Mode
                     </button>
                 </div>
                 <div class="col-md-3">
@@ -1584,7 +1584,7 @@
       // ====================================================================
       async function testConnection() {
         const btn = document.getElementById('testConnectionBtn');
-        btn.innerHTML = '<span class="loading-spinner"></span> Testing...';
+        btn.innerHTML = '<span class="loading-spinner"></span> Pinging...';
         btn.disabled = true;
         hideError('connectionError');
         updateConnectionStatus('connecting', 'Connecting...');
@@ -1593,7 +1593,7 @@
           const stats = await apiFetch('/api/experiments/stats');
           updateConnectionStatus('connected', 'Connected');
           btn.innerHTML = 'Connected!';
-          btn.classList.remove('btn-light');
+          btn.classList.remove('btn-outline-light');
           btn.classList.add('btn-success');
 
           // Update data source badge
@@ -1608,21 +1608,21 @@
           await loadRuns();
 
           setTimeout(() => {
-            btn.innerHTML = 'Test Connection';
+            btn.innerHTML = 'Ping API';
             btn.classList.remove('btn-success');
-            btn.classList.add('btn-light');
+            btn.classList.add('btn-outline-light');
             btn.disabled = false;
           }, 2000);
         } catch (err) {
           updateConnectionStatus('disconnected', 'Not connected');
           showError('connectionError', err.message);
           btn.innerHTML = 'Connection Failed';
-          btn.classList.remove('btn-light');
+          btn.classList.remove('btn-outline-light');
           btn.classList.add('btn-danger');
           setTimeout(() => {
-            btn.innerHTML = 'Test Connection';
+            btn.innerHTML = 'Ping API';
             btn.classList.remove('btn-danger');
-            btn.classList.add('btn-light');
+            btn.classList.add('btn-outline-light');
             btn.disabled = false;
           }, 2000);
         }
@@ -1675,7 +1675,7 @@
             });
           }
 
-          btn.innerHTML = 'Refresh Runs';
+          btn.innerHTML = 'Fetch Runs';
         } catch (err) {
           showError('connectionError', `Failed to load runs: ${err.message}`);
           btn.innerHTML = 'Retry';
