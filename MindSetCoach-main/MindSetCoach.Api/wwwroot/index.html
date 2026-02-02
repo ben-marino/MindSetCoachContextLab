@@ -1629,6 +1629,28 @@
       }
 
       // ====================================================================
+      // Dropdown Formatting Helpers
+      // ====================================================================
+      function friendlyExperimentType(type) {
+        var types = { position: 'Position Test', persona: 'Persona War', compression: 'Compression' };
+        return types[type] || type;
+      }
+
+      function shortModelName(model) {
+        var names = { 'gpt-4o-mini': 'GPT-4o Mini', 'claude-3-haiku-20240307': 'Claude Haiku', 'gemini-1.5-flash': 'Gemini Flash', 'deepseek-chat': 'DeepSeek' };
+        return names[model] || model;
+      }
+
+      function timeAgo(dateString) {
+        var diff = Date.now() - new Date(dateString).getTime();
+        var mins = Math.floor(diff / 60000);
+        if (mins < 60) return mins + 'm ago';
+        var hours = Math.floor(mins / 60);
+        if (hours < 24) return hours + 'h ago';
+        return new Date(dateString).toLocaleDateString('en-AU', { month: 'short', day: 'numeric' });
+      }
+
+      // ====================================================================
       // Load Runs
       // ====================================================================
       async function loadRuns() {
@@ -1640,17 +1662,14 @@
         try {
           allRuns = await apiFetch('/api/experiments/runs?limit=50');
 
-          selector.innerHTML = '<option value="">-- Select a run --</option>';
-
           if (allRuns.length === 0) {
-            selector.innerHTML += '<option value="" disabled>No runs found</option>';
+            selector.innerHTML = '<option value="">-- Select a run --</option><option value="" disabled>No runs found</option>';
           } else {
+            selector.innerHTML = '';
             allRuns.forEach(run => {
-              const date = new Date(run.startedAt).toLocaleDateString();
-              const status = run.status === 'completed' ? 'Done' : run.status;
               selector.innerHTML += `
                 <option value="${run.id}">
-                  #${run.id} - ${run.experimentType} - ${run.model} (${date}) [${status}]
+                  #${run.id} - ${friendlyExperimentType(run.experimentType)} - ${shortModelName(run.model)} - ${timeAgo(run.startedAt)}
                 </option>
               `;
             });
@@ -2714,6 +2733,7 @@ First off, I want you to know - you showed up this week. That matters. Even on T
             // Optionally auto-load the most recent run
             loadRunDetails(allRuns[0].id);
             document.getElementById('runSelector').value = allRuns[0].id.toString();
+            document.getElementById('runSelector').dispatchEvent(new Event('change'));
           } else {
             // No runs in database - show demo data
             showDemoData();
