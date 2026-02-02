@@ -257,6 +257,32 @@
             font-size: 0.85rem;
         }
 
+        /* Run Summary Chips */
+        #runSummaryChips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 1rem;
+        }
+        .summary-chip {
+            background: #f1f5f9;
+            border-radius: 10px;
+            padding: 6px 14px;
+            display: flex;
+            flex-direction: column;
+        }
+        .chip-label {
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            color: #64748b;
+            letter-spacing: 0.5px;
+        }
+        .chip-value {
+            font-weight: 700;
+            color: #1e293b;
+            font-size: 0.95rem;
+        }
+
         /* Control bar - always visible */
         .control-bar {
             display: flex;
@@ -690,6 +716,30 @@
                 </button>
             </div>
             <div id="connectionError" class="mt-3" style="display: none;"></div>
+        </div>
+
+        <!-- Run Summary Chips -->
+        <div id="runSummaryChips" style="display: none;">
+            <span class="summary-chip">
+                <span class="chip-label">Model</span>
+                <span class="chip-value" id="chipModelValue">--</span>
+            </span>
+            <span class="summary-chip">
+                <span class="chip-label">Temp</span>
+                <span class="chip-value" id="chipTempValue">--</span>
+            </span>
+            <span class="summary-chip">
+                <span class="chip-label">Tokens</span>
+                <span class="chip-value" id="chipTokensValue">--</span>
+            </span>
+            <span class="summary-chip">
+                <span class="chip-label">Cost</span>
+                <span class="chip-value" id="chipCostValue">--</span>
+            </span>
+            <span class="summary-chip">
+                <span class="chip-label">Type</span>
+                <span class="chip-value" id="chipTypeValue">--</span>
+            </span>
         </div>
 
         <!-- Recipe Preset Chips -->
@@ -1857,6 +1907,14 @@
       // Render Run Data to UI
       // ====================================================================
       function renderRunData(run) {
+        // Show and populate run summary chips
+        document.getElementById('runSummaryChips').style.display = 'flex';
+        document.getElementById('chipModelValue').textContent = shortModelName(run.model);
+        document.getElementById('chipTempValue').textContent = run.temperature;
+        document.getElementById('chipTokensValue').textContent = run.tokens.toLocaleString();
+        document.getElementById('chipCostValue').textContent = '$' + run.estCost.toFixed(5);
+        document.getElementById('chipTypeValue').textContent = friendlyExperimentType(run.experimentType);
+
         // Update persona experiment section
         document.getElementById('personaModel').textContent = run.model;
         document.getElementById('personaTemp').textContent = run.temperature;
